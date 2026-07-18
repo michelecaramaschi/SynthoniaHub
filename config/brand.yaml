@@ -1,0 +1,56 @@
+# Profilo del brand usato dal generatore di post marketing.
+# Modifica questo file per cambiare tono, argomenti e piattaforme
+# senza toccare il codice.
+
+brand:
+  name: Synthonia
+  website: https://www.synthonia.com
+  tagline: The Ultimate Sound Resource
+  description: >
+    Synthonia è la piattaforma di riferimento per tastieristi, sound designer
+    e sviluppatori di applicazioni per strumenti musicali elettronici.
+    Il marketplace permette ai sound designer di creare suoni di qualità
+    professionale e venderli guadagnando dalla propria creatività.
+  audience: >
+    Tastieristi, musicisti elettronici, sound designer, produttori musicali
+    e appassionati di sintetizzatori (hobbisti e professionisti).
+  tone: >
+    Appassionato e competente, da musicista a musicista. Concreto, mai
+    aziendalese. Entusiasmo genuino per i suoni e per la community.
+  values:
+    - Qualità professionale dei suoni
+    - Supporto alla community di sound designer
+    - Guadagno equo per i creatori
+    - Passione per i sintetizzatori e le tastiere
+
+platforms:
+  instagram:
+    max_chars: 2200
+    hashtags: 10
+    style: Visivo ed emozionale, frasi brevi, emoji con moderazione.
+  facebook:
+    max_chars: 1500
+    hashtags: 3
+    style: Conversazionale, orientato alla community, invito al commento.
+  x:
+    max_chars: 280
+    hashtags: 2
+    style: Diretto e incisivo, una sola idea per post.
+  linkedin:
+    max_chars: 1800
+    hashtags: 5
+    style: Professionale ma umano, focus sul lato business del sound design.
+
+topics:
+  - Nuovi suoni e patch disponibili sul marketplace
+  - Come guadagnare vendendo i propri suoni su Synthonia
+  - Consigli di sound design per tastieristi
+  - Storie e talenti della community Synthonia
+  - Suoni iconici dei sintetizzatori e come ricrearli
+  - Preparare il set di suoni perfetto per il live
+  - Novità e tendenze nel mondo delle tastiere e dei synth
+  - Perché la qualità del suono fa la differenza in una produzione
+
+defaults:
+  language: it   # it | en
+  platform: instagram

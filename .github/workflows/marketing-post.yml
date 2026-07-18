@@ -1,0 +1,58 @@
+name: Creazione post marketing automatica
+
+on:
+  schedule:
+    # Lunedì e giovedì alle 09:00 UTC
+    - cron: "0 9 * * 1,4"
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "Piattaforma (instagram, facebook, x, linkedin) — vuoto = rotazione automatica"
+        required: false
+      topic:
+        description: "Argomento del post — vuoto = rotazione automatica"
+        required: false
+      lang:
+        description: "Lingua (it | en) — vuoto = da config"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installa dipendenze
+        run: pip install -r requirements.txt
+
+      - name: Genera il post
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          ARGS=""
+          [ -n "${{ inputs.platform }}" ] && ARGS="$ARGS --platform ${{ inputs.platform }}"
+          [ -n "${{ inputs.lang }}" ] && ARGS="$ARGS --lang ${{ inputs.lang }}"
+          if [ -n "${{ inputs.topic }}" ]; then
+            python -m marketing_bot $ARGS --topic "${{ inputs.topic }}"
+          else
+            python -m marketing_bot $ARGS
+          fi
+
+      - name: Commit del post generato
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add posts/
+          if git diff --cached --quiet; then
+            echo "Nessun nuovo post da committare."
+          else
+            git commit -m "Aggiungi post marketing generato automaticamente"
+            git push
+          fi
