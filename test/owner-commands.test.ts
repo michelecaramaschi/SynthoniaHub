@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseAmount, parseOwnerCommand } from "../src/ai/owner-parser.js";
+import { parseAmount, parseOwnerCommand } from "../src/core/owner-commands.js";
 
 describe("parseAmount", () => {
   it.each([
@@ -14,15 +14,12 @@ describe("parseAmount", () => {
     expect(parseAmount(raw)).toBe(expected);
   });
 
-  it.each(["", "abc", "900 circa", "-100", "0"])(
-    "rejects %s",
-    (raw) => {
-      expect(parseAmount(raw)).toBeNull();
-    },
-  );
+  it.each(["", "abc", "900 circa", "-100", "0"])("rejects %s", (raw) => {
+    expect(parseAmount(raw)).toBeNull();
+  });
 });
 
-describe("parseOwnerCommand (regex tier)", () => {
+describe("parseOwnerCommand", () => {
   it("parses price commands in both orders", () => {
     expect(parseOwnerCommand("42 prezzo 900")).toEqual({
       action: "set_price",
@@ -77,7 +74,7 @@ describe("parseOwnerCommand (regex tier)", () => {
     expect(parseOwnerCommand("LISTA")).toEqual({ action: "list" });
   });
 
-  it("returns null for free-form text (AI fallback territory)", () => {
+  it("returns null for free-form text (rejected, no AI fallback)", () => {
     expect(parseOwnerCommand("per il matrimonio di Giulia direi 900 euro")).toBeNull();
     expect(parseOwnerCommand("ciao")).toBeNull();
     expect(parseOwnerCommand("42 prezzo circa novecento")).toBeNull();

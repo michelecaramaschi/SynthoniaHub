@@ -32,6 +32,8 @@ const envSchema = z.object({
 });
 
 export interface AppConfig {
+  /** True when ANTHROPIC_API_KEY is set: the bot uses AI conversation instead of the guided flow. */
+  aiEnabled: boolean;
   anthropicModel: string;
   whatsappToken: string | undefined;
   phoneNumberId: string | undefined;
@@ -61,6 +63,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   );
 
   return {
+    aiEnabled: Boolean(e.ANTHROPIC_API_KEY && e.ANTHROPIC_API_KEY.length > 0),
     anthropicModel: e.ANTHROPIC_MODEL,
     whatsappToken: e.WHATSAPP_TOKEN,
     phoneNumberId: e.PHONE_NUMBER_ID,

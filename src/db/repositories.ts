@@ -20,6 +20,7 @@ export interface QuoteRequest {
   special_requests: string | null;
   price_eur: number | null;
   owner_notes: string | null;
+  awaiting_field: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -36,6 +37,7 @@ export interface QuoteRequestPatch {
   special_requests?: string;
   price_eur?: number;
   owner_notes?: string;
+  awaiting_field?: string | null;
 }
 
 export interface StoredMessage {

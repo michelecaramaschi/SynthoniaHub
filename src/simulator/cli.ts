@@ -47,6 +47,9 @@ let identity: { kind: "customer" | "owner"; phone: string } = {
 };
 
 console.log("🎧 Simulatore SynthoniaHub");
+console.log(
+  `Modalità conversazione: ${config.aiEnabled ? "AI (Claude)" : "flusso guidato (nessuna API)"}`,
+);
 console.log("Scrivi come cliente, oppure usa /owner, /customer [n], /state, /reset, /exit.");
 console.log(`Identità attuale: cliente +${identity.phone}\n`);
 

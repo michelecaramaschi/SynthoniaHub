@@ -1,45 +1,51 @@
 # Scenario demo end-to-end (~2 minuti)
 
-Prerequisito: `ANTHROPIC_API_KEY` nel file `.env` (o profilo `ant auth login`).
-Non servono credenziali WhatsApp.
+Prerequisito: solo Node.js ≥ 22. La chiave API è **facoltativa**:
+
+- **senza** `ANTHROPIC_API_KEY` → flusso guidato (il bot fa domande in sequenza)
+- **con** `ANTHROPIC_API_KEY` → conversazione AI in linguaggio naturale
 
 ```
 npm install
 npm run simulate
 ```
 
+All'avvio il simulatore stampa quale modalità è attiva.
+
 ## 1. Il cliente chiede un preventivo
 
-Scrivi (come cliente) i messaggi seguenti, uno alla volta. Le risposte esatte
-del bot variano, ma deve sempre: salutare, fare al massimo 1-2 domande alla
-volta, non fare mai prezzi.
+Scrivi (come cliente) i messaggi seguenti, uno alla volta.
 
 ```
 Ciao! Mi sposo l'anno prossimo e cercavo un dj per il ricevimento
 ```
 
-Il bot si presenta e chiede qualche dettaglio (data, luogo, ...).
+Il bot si presenta e chiede il tipo di evento (in modalità guidata) o qualche
+dettaglio (in modalità AI).
 
 ```
-Il matrimonio è sabato 12 settembre 2026 a Villa Le Rose a Bergamo, saremo circa 120 invitati
+è un matrimonio
+sabato 12 settembre 2026
+Villa Le Rose, Bergamo
+saremo circa 120 invitati
+dj set, impianto audio e luci
+dalle 19 all'1
+Maria Rossi
+no grazie
 ```
 
-```
-Ci servirebbe il dj set con impianto audio e anche le luci per la pista. Direi dalle 19 all'1, quindi 6 ore. Ah, sono Maria!
-```
+In modalità AI puoi anche scrivere tutto insieme in un unico messaggio libero.
 
-Quando tutte le informazioni sono raccolte, il bot ringrazia e compare il
-riquadro `to OWNER` con il riepilogo strutturato:
+Quando tutte le informazioni sono raccolte, il bot ringrazia con un riepilogo e
+compare il riquadro `to OWNER` con la richiesta strutturata:
 
 ```
 🎧 NUOVA RICHIESTA DI PREVENTIVO #1
-👤 Cliente: Maria ...
+👤 Cliente: Maria Rossi ...
 ...
 Per inviare il preventivo rispondi:
   1 prezzo 900
 ```
-
-Se il bot fa ancora domande, rispondi: mancava qualche campo.
 
 ## 2. Prova che il bot non fa prezzi
 
@@ -67,10 +73,8 @@ Compare l'anteprima esatta del messaggio che riceverà il cliente.
 Il riquadro `to CUSTOMER` mostra il preventivo formattato inviato al cliente
 (1.200 €, nota inclusa) e il titolare riceve la conferma.
 
-Comando in linguaggio naturale (usa l'AI di fallback):
-
 ```
-segna come vinto il matrimonio di Maria
+1 vinto
 ```
 
 ## 4. Verifica lo stato

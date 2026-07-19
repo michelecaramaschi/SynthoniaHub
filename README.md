@@ -2,14 +2,14 @@
 
 Sistema di automazione per **Synthonia** (intrattenimento musicale per matrimoni,
 feste ed eventi): risponde subito ai clienti che scrivono su WhatsApp, raccoglie
-i dettagli dell'evento con un assistente AI in italiano e prepara la richiesta di
-preventivo. **Il prezzo lo decidi sempre tu**: il sistema ti notifica su WhatsApp,
-tu rispondi con il prezzo, controlli l'anteprima e approvi l'invio.
+i dettagli dell'evento e prepara la richiesta di preventivo. **Il prezzo lo decidi
+sempre tu**: il sistema ti notifica su WhatsApp, tu rispondi con il prezzo,
+controlli l'anteprima e approvi l'invio.
 
 ## Come funziona
 
 ```
-Cliente su WhatsApp ──▶ Bot AI (Claude) raccoglie: tipo evento, data, luogo,
+Cliente su WhatsApp ──▶ Il bot raccoglie: tipo evento, data, luogo,
                         ospiti, servizi, durata, richieste speciali
                               │ quando è tutto completo
                               ▼
@@ -23,8 +23,25 @@ Cliente riceve il preventivo formattato ──▶  42 vinto / 42 perso
 ```
 
 Regole fisse del bot: **mai prezzi o stime** (ogni preventivo è su misura), mai
-disponibilità inventate, risponde alle FAQ solo dal profilo aziendale
-(`config/business.json`).
+disponibilità inventate.
+
+## Due modalità di conversazione (scegli tu)
+
+Il "cervello" che parla col cliente è configurabile in base alla presenza di una
+chiave API in `.env`. Tutto il resto (comandi del titolare, invio preventivi,
+database) è identico nelle due modalità.
+
+| | **Flusso guidato** (predefinito) | **AI conversazionale** |
+|---|---|---|
+| Come si attiva | Nessuna chiave: è il default | Imposta `ANTHROPIC_API_KEY` in `.env` |
+| Costo | Solo hosting | ~1-3 centesimi a preventivo |
+| Conversazione | Domande in sequenza; estrae data, ospiti, servizi, durata dal testo | Linguaggio naturale: capisce testo libero e ordine sparso, risponde a domande fuori schema |
+| Dipendenze esterne | Nessuna | API Anthropic |
+
+**Per attivare la modalità AI** (opzionale): crea una chiave su
+[console.anthropic.com](https://console.anthropic.com/) → *API Keys* → *Create Key*,
+carica un piccolo credito, e incolla la chiave in `.env` come `ANTHROPIC_API_KEY`.
+All'avvio il sistema (e il simulatore) ti dice quale modalità è attiva.
 
 ### Comandi del titolare
 
@@ -37,17 +54,18 @@ disponibilità inventate, risponde alle FAQ solo dal profilo aziendale
 | `42 vinto` / `42 perso` | chiude la richiesta dopo l'esito |
 | `lista` | elenca le richieste aperte |
 
-Puoi anche scrivere in linguaggio naturale ("per il matrimonio di Giulia direi
-900 euro"): un parser AI interpreta il messaggio e, in caso di dubbio, ti chiede
-di usare i comandi.
+I comandi funzionano sempre. In modalità AI puoi anche scrivere in linguaggio
+naturale ("per il matrimonio di Giulia direi 900 euro") e il sistema lo
+interpreta; in modalità guidata usa i comandi qui sopra.
 
 ## Provalo subito senza WhatsApp (simulatore)
 
-Serve solo Node.js ≥ 22 e una chiave API Anthropic ([console](https://platform.claude.com/)).
+Serve solo Node.js ≥ 22. La chiave API è **facoltativa** (senza, parte il flusso
+guidato gratuito).
 
 ```bash
 npm install
-cp .env.example .env        # inserisci ANTHROPIC_API_KEY
+cp .env.example .env        # ANTHROPIC_API_KEY opzionale (vuoto = flusso guidato)
 npm run simulate
 ```
 
@@ -82,8 +100,9 @@ hosting sempre acceso con **disco persistente** e **HTTPS pubblico**.
 - Alternative equivalenti: [Render](https://render.com/) (con persistent disk), [Fly.io](https://fly.io/) (con volume), oppure un VPS con systemd + Caddy/nginx per l'HTTPS.
 
 Variabili d'ambiente da impostare (vedi `.env.example`): `WHATSAPP_TOKEN`,
-`PHONE_NUMBER_ID`, `VERIFY_TOKEN`, `APP_SECRET`, `ANTHROPIC_API_KEY`,
-`OWNER_PHONE` (il tuo numero, es. `393401234567`), `DB_PATH=/app/data/synthonia.db`.
+`PHONE_NUMBER_ID`, `VERIFY_TOKEN`, `APP_SECRET`, `OWNER_PHONE` (il tuo numero,
+es. `393401234567`), `DB_PATH=/app/data/synthonia.db`. `ANTHROPIC_API_KEY` è
+opzionale: impostala solo se vuoi la modalità AI conversazionale.
 
 Avvio: `npm run start` (il process manager della piattaforma lo tiene attivo).
 
@@ -121,15 +140,17 @@ sqlite3 /app/data/synthonia.db ".backup /app/data/backup-$(date +%F).db"
 ```
 src/
 ├── index.ts                 # entrypoint del server WhatsApp
-├── config.ts                # validazione .env + profilo aziendale
+├── config.ts                # validazione .env + profilo aziendale + scelta modalità
 ├── server/                  # Express: verifica webhook + firma HMAC
 ├── core/
-│   ├── router.ts            # smista i messaggi (titolare vs cliente), coda per numero
-│   ├── customer-conversation.ts  # turno AI: estrazione dati + risposta
-│   ├── owner-flow.ts        # notifica, comandi, approvazione, invio preventivo
+│   ├── router.ts            # smista i messaggi (titolare vs cliente), sceglie il motore
+│   ├── guided-conversation.ts    # flusso guidato deterministico (no API)
+│   ├── customer-conversation.ts  # turno AI conversazionale (con API Claude)
+│   ├── owner-commands.ts    # parser dei comandi del titolare (regex)
+│   ├── owner-flow.ts        # notifica, esecuzione comandi, invio preventivo
 │   ├── state-machine.ts     # collecting_info → pending_owner → quoted → won/lost
 │   └── templates.ts         # tutti i messaggi in italiano
-├── ai/                      # client Claude, system prompt, tool, parser comandi
+├── ai/                      # solo modalità AI: client Claude, system prompt, tool
 ├── db/                      # SQLite: richieste, messaggi, migrazioni
 ├── whatsapp/                # Meta Cloud API: invio, firma, parsing payload
 └── simulator/               # REPL per provare tutto senza WhatsApp
@@ -138,9 +159,10 @@ config/business.json         # servizi, FAQ, zona, tono: personalizzalo!
 
 ## Personalizzazione
 
-- **Profilo aziendale**: modifica `config/business.json` (servizi, FAQ, zona coperta, tono). Il bot risponde solo in base a questo file.
-- **Testi dei messaggi**: tutti in `src/core/templates.ts` (preventivo, rifiuto, notifiche).
-- **Modello AI**: `ANTHROPIC_MODEL` in `.env` (default `claude-opus-4-8`).
+- **Profilo aziendale**: modifica `config/business.json` (servizi, FAQ, zona coperta, tono).
+- **Testi e domande**: tutti in `src/core/templates.ts` (domande dell'intervista, preventivo, rifiuto, notifiche).
+- **Regole di estrazione** (flusso guidato): `src/core/guided-conversation.ts` (date, ospiti, servizi, durata).
+- **Modello AI** (solo modalità AI): `ANTHROPIC_MODEL` in `.env` (default `claude-opus-4-8`).
 
 ## Roadmap (non incluso in questa versione)
 

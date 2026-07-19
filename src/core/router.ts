@@ -4,10 +4,12 @@ import type {
   QuoteRequestRepository,
 } from "../db/repositories.js";
 import type { MessagingProvider } from "../whatsapp/provider.js";
+import { runGuidedTurn } from "./guided-conversation.js";
 import { runCustomerTurn } from "./customer-conversation.js";
 import { handleOwnerMessage, notifyOwner } from "./owner-flow.js";
 import {
-  AI_UNAVAILABLE_MESSAGE,
+  afterHandoffReply,
+  forwardToOwner,
   UNSUPPORTED_MEDIA_MESSAGE,
 } from "./templates.js";
 
@@ -72,8 +74,8 @@ export class Router {
     // Customer message
     const request = quoteRepo.findOrCreateActive(event.from);
     if (event.profileName && !request.customer_name) {
-      // Meta profile name as a starting point; the AI overwrites it if the
-      // customer introduces themselves differently.
+      // Meta profile name as a starting point; the interview overwrites it
+      // if the customer introduces themselves differently.
       quoteRepo.patch(request.id, { customer_name: event.profileName });
     }
 
@@ -93,28 +95,48 @@ export class Router {
 
     try {
       const current = quoteRepo.getById(request.id)!;
-      const result = await runCustomerTurn({
-        config,
-        quoteRepo,
-        messageRepo,
-        request: current,
-        text: event.text,
-      });
+
+      if (current.status !== "collecting_info") {
+        // Request already handed to the owner: acknowledge and forward.
+        const reply = afterHandoffReply(current.status);
+        await provider.sendText(event.from, reply);
+        messageRepo.recordOutbound(request.id, reply);
+        const forward = forwardToOwner(current, event.text);
+        await this.trySend(config.ownerPhone, forward);
+        messageRepo.recordOutbound(request.id, forward);
+        return;
+      }
+
+      // Pick the conversation engine: AI (natural language) when a key is
+      // configured, otherwise the deterministic guided flow (no API, no cost).
+      const result = config.aiEnabled
+        ? await runCustomerTurn({
+            config,
+            quoteRepo,
+            messageRepo,
+            request: current,
+            text: event.text,
+          })
+        : runGuidedTurn({
+            quoteRepo,
+            request: current,
+            text: event.text,
+            business: config.business,
+          });
 
       await provider.sendText(event.from, result.reply);
       messageRepo.recordOutbound(request.id, result.reply);
 
-      if (result.completed && current.status === "collecting_info") {
+      if (result.completed) {
         const ready = quoteRepo.transition(request.id, "pending_owner");
-        await notifyOwner(this.deps, ready, result.summaryForOwner);
+        const summary = (result as { summaryForOwner?: string }).summaryForOwner;
+        await notifyOwner(this.deps, ready, summary);
       }
     } catch (error) {
       console.error(`Customer turn failed for +${event.from}:`, error);
-      await this.trySend(event.from, AI_UNAVAILABLE_MESSAGE);
-      messageRepo.recordOutbound(request.id, AI_UNAVAILABLE_MESSAGE);
       await this.trySend(
         config.ownerPhone,
-        `⚠️ Non sono riuscito a rispondere automaticamente a +${event.from} (richiesta #${request.id}). Controlla la conversazione appena puoi.`,
+        `⚠️ Errore nell'elaborazione del messaggio di +${event.from} (richiesta #${request.id}). Controlla la conversazione appena puoi.`,
       );
     }
   }

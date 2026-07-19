@@ -5,11 +5,8 @@ import type {
   QuoteRequestRepository,
 } from "../db/repositories.js";
 import type { MessagingProvider } from "../whatsapp/provider.js";
-import {
-  parseOwnerCommand,
-  parseOwnerCommandWithAI,
-  type OwnerCommand,
-} from "../ai/owner-parser.js";
+import { parseOwnerCommand, type OwnerCommand } from "./owner-commands.js";
+import { parseOwnerCommandWithAI } from "../ai/owner-parser.js";
 import {
   declineMessage,
   eventTypeLabel,
@@ -41,14 +38,22 @@ export async function handleOwnerMessage(
   deps: OwnerFlowDeps,
   text: string,
 ): Promise<void> {
-  const { config, quoteRepo } = deps;
-
+  // Deterministic commands always work; the AI fallback (if enabled) only
+  // kicks in for free-form replies the regex parser doesn't recognize.
   let command: OwnerCommand | null = parseOwnerCommand(text);
-  if (!command) {
-    const openRequests = quoteRepo.listByStatus(["pending_owner", "quoted"]);
-    command = await parseOwnerCommandWithAI(text, openRequests, config);
+  if (!command && deps.config.aiEnabled) {
+    const openRequests = deps.quoteRepo.listByStatus(["pending_owner", "quoted"]);
+    command = await parseOwnerCommandWithAI(text, openRequests, deps.config);
   }
 
+  if (!command) {
+    await deps.provider.sendText(
+      deps.config.ownerPhone,
+      `Non ho riconosciuto il comando. 🤔\n\n${ownerHelp()}`,
+    );
+    deps.messageRepo.recordOutbound(null, "help");
+    return;
+  }
   await executeOwnerCommand(deps, command);
 }
 
@@ -61,13 +66,6 @@ async function executeOwnerCommand(
     await provider.sendText(config.ownerPhone, body);
     messageRepo.recordOutbound(null, body);
   };
-
-  if (command.action === "unknown") {
-    await replyToOwner(
-      `Non ho capito il comando. 🤔\n\n${ownerHelp()}`,
-    );
-    return;
-  }
 
   if (command.action === "list") {
     const open = quoteRepo.listByStatus(["pending_owner", "quoted"]);

@@ -134,7 +134,79 @@ export function declineMessage(
   return lines.join("\n");
 }
 
-/** Fallback when the AI is unavailable. */
+// ── Guided conversation (interview) ─────────────────────────────────────────
+
+export type InterviewField =
+  | "event_type"
+  | "event_date"
+  | "location"
+  | "guest_count"
+  | "services"
+  | "duration_hours"
+  | "customer_name"
+  | "special_requests";
+
+export function greeting(business: BusinessProfile): string {
+  return `Ciao! Sono l'assistente di ${business.name} 🎶 Ti aiuto a richiedere un preventivo su misura per il tuo evento: bastano poche domande.`;
+}
+
+export function fieldQuestion(field: InterviewField): string {
+  switch (field) {
+    case "event_type":
+      return "Che tipo di evento stai organizzando? Un matrimonio, una festa privata o un evento pubblico? 🎉";
+    case "event_date":
+      return "Quando si terrà l'evento? Se hai già la data esatta, ancora meglio! 📅";
+    case "location":
+      return "Dove si svolgerà? Scrivimi la location e la città. 📍";
+    case "guest_count":
+      return "Quanti invitati sarete, più o meno? 👥";
+    case "services":
+      return "Quali servizi ti interessano? DJ set, musica live, luci, impianto audio… puoi sceglierne anche più di uno. 🎵";
+    case "duration_hours":
+      return 'Per quante ore indicativamente ti serve il servizio? (es. "6 ore" oppure "dalle 19 all\'1") ⏱';
+    case "customer_name":
+      return "Perfetto, ci siamo quasi! Come ti chiami?";
+    case "special_requests":
+      return 'Ultima cosa: hai richieste particolari? (brani speciali, momenti da accompagnare…) Se no, scrivi pure "no".';
+  }
+}
+
+export function priceQuestionReply(): string {
+  return "Per i prezzi: ogni preventivo è su misura, quindi non ho un listino da darti. Appena ho tutti i dettagli, il titolare ti manda la sua proposta personalizzata, senza impegno. 😊";
+}
+
+export function collectionCompleteMessage(
+  request: QuoteRequest,
+  business: BusinessProfile,
+): string {
+  const firstName = request.customer_name?.split(" ")[0];
+  const recap = [
+    `✨ ${eventTypeLabel(request.event_type)} — ${request.event_date ?? request.event_date_raw ?? "data da definire"}`,
+    `📍 ${request.location ?? "da definire"}`,
+    `👥 ${request.guest_count ?? "?"} ospiti`,
+    `🎵 ${serviceLabels(request.services, business)}`,
+    `⏱ ${request.duration_hours ?? "?"} ore`,
+  ].join("\n");
+  return `Grazie ${firstName ?? ""}! 🙏 Ecco il riepilogo della tua richiesta:\n\n${recap}\n\nHo inoltrato tutto al titolare: riceverai il preventivo su misura al più presto, di solito entro poche ore. 🎧`;
+}
+
+/** Reply to customer messages after the request was handed to the owner. */
+export function afterHandoffReply(status: string): string {
+  if (status === "quoted") {
+    return "Grazie del messaggio! 🎶 Il tuo preventivo è già stato inviato: ho girato la tua richiesta al titolare, che ti risponderà direttamente qui.";
+  }
+  return "Grazie del messaggio! 🎶 Il tuo preventivo è in preparazione: ho girato la tua nota al titolare, ti risponderà al più presto.";
+}
+
+/** Forward of a post-handoff customer message to the owner. */
+export function forwardToOwner(
+  request: QuoteRequest,
+  text: string,
+): string {
+  return `💬 Messaggio da ${request.customer_name ?? "cliente"} (+${request.customer_phone}) sulla richiesta #${request.id}:\n«${text}»`;
+}
+
+/** Fallback when message processing fails unexpectedly. */
 export const AI_UNAVAILABLE_MESSAGE =
   "Grazie per il tuo messaggio! 🎶 In questo momento non riusciamo a risponderti automaticamente, ma ti ricontattiamo al più presto.";
 
