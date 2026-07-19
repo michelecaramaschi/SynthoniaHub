@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Location — Synthonia</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><circle cx=%2216%22 cy=%2216%22 r=%2214%22 fill=%22none%22 stroke=%22%23222%22 stroke-width=%222%22/><text x=%2216%22 y=%2221%22 font-size=%2214%22 text-anchor=%22middle%22 fill=%22%23222%22 font-family=%22sans-serif%22>S</text></svg>" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav container">
+    <a href="index.html" class="brand">
+      <span class="brand-mark">S</span>
+      Synthonia
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html#servizi">Servizi</a></li>
+      <li><a href="index.html#eventi">Eventi</a></li>
+      <li><a href="locations.html">Location</a></li>
+      <li><a href="index.html#chi-siamo">Chi siamo</a></li>
+      <li><a href="index.html#preventivo">Preventivo</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="https://wa.me/393923250072" target="_blank" rel="noopener" class="nav-icon wa" aria-label="WhatsApp">💬</a>
+      <a href="index.html#preventivo" class="btn btn-primary">Preventivo</a>
+      <button class="nav-toggle" aria-label="Apri menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <div id="location-not-found" class="container empty-state" hidden>
+    <h2>Location non trovata</h2>
+    <p>La location cercata non esiste o è stata rimossa.</p>
+    <a href="locations.html" class="btn btn-outline">Torna a tutte le location</a>
+  </div>
+
+  <div id="location-content">
+    <section class="location-hero">
+      <div class="container">
+        <p class="breadcrumb"><a href="locations.html">Location</a> / <span id="breadcrumb-name"></span></p>
+        <div class="location-hero-cover" id="location-cover"></div>
+        <span class="eyebrow" id="location-tagline"></span>
+        <h1 id="location-name"></h1>
+        <p id="location-description" style="max-width:680px;"></p>
+        <div class="location-meta">
+          <div><strong id="meta-city"></strong><span>Città</span></div>
+          <div><strong id="meta-capacity"></strong><span>Capienza</span></div>
+          <div><strong id="meta-events-count"></strong><span>Eventi ospitati</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding-top:0;">
+      <div class="container">
+        <div class="section-head" style="text-align:left;margin:0 0 32px;">
+          <span class="eyebrow">Programma</span>
+          <h2>Eventi in questa location</h2>
+        </div>
+        <div class="events-list" id="events-list"></div>
+      </div>
+    </section>
+
+    <section class="about">
+      <div class="container">
+        <div class="section-head" style="text-align:left;margin:0 0 32px;">
+          <span class="eyebrow">Galleria</span>
+          <h2>Foto della location</h2>
+        </div>
+        <div class="gallery-grid" id="gallery-grid"></div>
+      </div>
+    </section>
+
+    <section class="quote">
+      <div class="container" style="text-align:center;">
+        <h2>Ti piace questa location?</h2>
+        <p style="max-width:560px;margin:0 auto 24px;">Richiedi un preventivo per organizzare il tuo evento qui: ti risponderemo su WhatsApp con tutte le informazioni.</p>
+        <a href="index.html#preventivo" class="btn btn-whatsapp">Richiedi un preventivo</a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer" id="contatti">
+  <div class="container">
+    <div class="footer-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-mark">S</span>
+        Synthonia
+      </a>
+      <ul class="footer-links">
+        <li><a href="index.html#servizi">Servizi</a></li>
+        <li><a href="locations.html">Location</a></li>
+        <li><a href="index.html#preventivo">Preventivo</a></li>
+        <li><a href="https://wa.me/393923250072" target="_blank" rel="noopener">WhatsApp</a></li>
+      </ul>
+    </div>
+    <div class="footer-bottom">
+      &copy; <span id="year"></span> Synthonia — Eventi &amp; Spettacoli. Tutti i diritti riservati.
+    </div>
+  </div>
+</footer>
+
+<a class="wa-float" href="https://wa.me/393923250072" target="_blank" rel="noopener" aria-label="Scrivici su WhatsApp">💬</a>
+
+<script src="js/locations-data.js"></script>
+<script src="js/locations-render.js"></script>
+<script src="js/main.js"></script>
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+  document.addEventListener("DOMContentLoaded", initLocationDetailPage);
+</script>
+</body>
+</html>
