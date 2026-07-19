@@ -76,6 +76,15 @@ Lo scenario passo-passo completo è in [`test/e2e-scenario.md`](test/e2e-scenari
 Test automatici (senza chiave API): `npm test` — firma webhook, state machine,
 comandi titolare, flusso di approvazione, endpoint webhook.
 
+## Provalo sul numero WhatsApp vero, ma in locale (ngrok)
+
+Vuoi vedere il bot rispondere sul numero business reale **senza ancora un
+hosting**? Puoi tenere il server sul tuo computer ed esporlo con un tunnel
+gratuito (ngrok). Guida passo-passo: [`docs/test-locale-ngrok.md`](docs/test-locale-ngrok.md).
+
+È perfetto per la prima prova; per l'uso quotidiano dell'azienda serve però un
+hosting sempre acceso (sotto).
+
 ## Messa in produzione
 
 ### 1. Prerequisiti Meta (una tantum, ~1 ora)
