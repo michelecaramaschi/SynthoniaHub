@@ -3,25 +3,34 @@
 # senza toccare il codice.
 
 brand:
-  name: Synthonia
-  website: https://www.synthonia.com
-  tagline: The Ultimate Sound Resource
+  name: Synthonia Agency
+  website: https://synthoniaagency.com  # in arrivo — sito attuale: https://www.michelecaramaschi.it
+  tagline: Musica e intrattenimento per i tuoi eventi
   description: >
-    Synthonia è la piattaforma di riferimento per tastieristi, sound designer
-    e sviluppatori di applicazioni per strumenti musicali elettronici.
-    Il marketplace permette ai sound designer di creare suoni di qualità
-    professionale e venderli guadagnando dalla propria creatività.
+    Synthonia Agency è l'agenzia di eventi e intrattenimento fondata da
+    Michele Caramaschi, DJ di Mantova. Dai matrimoni agli eventi privati,
+    dai DJ set nei club ai format di intrattenimento per locali e location,
+    Synthonia cura la musica e l'atmosfera dell'evento dall'inizio alla fine:
+    impianto audio, luci, microfoni wireless, pedana modulare ed effetti
+    speciali inclusi. Repertorio ampio e trasversale: chill lounge,
+    commerciale, R&B, latino e revival anni '80/'90/2000.
   audience: >
-    Tastieristi, musicisti elettronici, sound designer, produttori musicali
-    e appassionati di sintetizzatori (hobbisti e professionisti).
+    Coppie che organizzano il matrimonio, privati che festeggiano compleanni
+    ed eventi, locali e club in cerca di DJ set e format di intrattenimento,
+    aziende per feste ed eventi corporate. Principalmente Mantova e Nord Italia.
   tone: >
-    Appassionato e competente, da musicista a musicista. Concreto, mai
-    aziendalese. Entusiasmo genuino per i suoni e per la community.
+    Caldo, diretto e professionale, da persona vera e non da agenzia anonima.
+    Trasmette l'energia della festa e la cura per i dettagli. Italiano
+    naturale, niente gergo da marketing.
   values:
-    - Qualità professionale dei suoni
-    - Supporto alla community di sound designer
-    - Guadagno equo per i creatori
-    - Passione per i sintetizzatori e le tastiere
+    - Ogni evento è unico e merita una colonna sonora su misura
+    - Cura dei dettagli tecnici (audio, luci, effetti) senza pensieri per il cliente
+    - Esperienza sul campo, dai club ai matrimoni
+    - Far divertire tutti, da ogni generazione in pista
+  notes: >
+    Il sito synthoniaagency.com non è ancora online: nei post non inserire
+    link al sito. Come contatto usa il profilo Instagram @michicaramaschi
+    o invita a scrivere in direct.
 
 platforms:
   instagram:
@@ -31,7 +40,7 @@ platforms:
   facebook:
     max_chars: 1500
     hashtags: 3
-    style: Conversazionale, orientato alla community, invito al commento.
+    style: Conversazionale, orientato alla community locale, invito al commento.
   x:
     max_chars: 280
     hashtags: 2
@@ -39,17 +48,17 @@ platforms:
   linkedin:
     max_chars: 1800
     hashtags: 5
-    style: Professionale ma umano, focus sul lato business del sound design.
+    style: Professionale ma umano, focus su eventi aziendali e collaborazioni con locali.
 
 topics:
-  - Nuovi suoni e patch disponibili sul marketplace
-  - Come guadagnare vendendo i propri suoni su Synthonia
-  - Consigli di sound design per tastieristi
-  - Storie e talenti della community Synthonia
-  - Suoni iconici dei sintetizzatori e come ricrearli
-  - Preparare il set di suoni perfetto per il live
-  - Novità e tendenze nel mondo delle tastiere e dei synth
-  - Perché la qualità del suono fa la differenza in una produzione
+  - La musica giusta per il ricevimento di matrimonio, momento per momento
+  - Dietro le quinte di un DJ set in un club
+  - Come scegliere il DJ per il proprio matrimonio
+  - Effetti speciali e luci che trasformano una festa
+  - Format di intrattenimento per locali e location
+  - Revival anni '80/'90/2000, la playlist che fa ballare tutte le generazioni
+  - Eventi privati e compleanni con musica su misura
+  - Racconti da eventi reali, l'emozione della pista piena
 
 defaults:
   language: it   # it | en

@@ -5,7 +5,9 @@ Git for Synthonia
 ## Creazione post marketing automatica
 
 Questo repository include un generatore automatico di post marketing per
-[Synthonia](https://www.synthonia.com) basato sull'API Claude. Genera post
+**Synthonia Agency** — l'agenzia di eventi e intrattenimento di
+[Michele Caramaschi](https://www.michelecaramaschi.it) (sito
+synthoniaagency.com in arrivo) — basato sull'API Claude. Genera post
 pronti per Instagram, Facebook, X e LinkedIn, con rotazione automatica di
 piattaforme e argomenti, e li salva in `posts/`.
 

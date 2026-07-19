@@ -44,9 +44,11 @@ def _build_prompt(config: dict, platform: str, topic: str, language: str) -> tup
         f"Pubblico: {brand['audience']}\n"
         f"Tono di voce: {brand['tone']}\n"
         f"Valori: {', '.join(brand['values'])}\n\n"
-        "Scrivi post che sembrino scritti da un musicista appassionato, "
-        "non da un'agenzia. Niente promesse esagerate, niente gergo aziendale."
+        "Scrivi post che sembrino scritti da una persona vera e appassionata, "
+        "non da un'agenzia anonima. Niente promesse esagerate, niente gergo aziendale."
     )
+    if brand.get("notes"):
+        system += f"\n\nIndicazioni operative: {brand['notes']}"
 
     user = (
         f"Scrivi un post per {platform} in {lang_name} sull'argomento:\n"
