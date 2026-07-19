@@ -95,6 +95,9 @@ hosting sempre acceso (sotto).
 Serve un numero di telefono **dedicato** al business (non puoi usare il numero
 già registrato sull'app WhatsApp/WhatsApp Business del telefono).
 
+Guida completa passo-passo (con screenshot dei menù e i problemi comuni):
+**[`docs/setup-meta.md`](docs/setup-meta.md)**. In sintesi:
+
 1. Crea un account [Meta Business](https://business.facebook.com/) e verifica l'azienda.
 2. Su [developers.facebook.com](https://developers.facebook.com/) crea un'app di tipo **Business** e aggiungi il prodotto **WhatsApp**.
 3. Per i primi test Meta ti dà un **numero di prova** (funziona solo verso massimo 5 numeri verificati — perfetto per provare). Poi registra il tuo numero reale in *WhatsApp → API Setup*.
