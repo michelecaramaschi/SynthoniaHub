@@ -1,0 +1,50 @@
+{
+  "name": "Synthonia",
+  "description": "Servizi di intrattenimento musicale per matrimoni, feste private ed eventi pubblici",
+  "coverage_area": "Lombardia e province limitrofe (trasferte più lunghe valutabili su richiesta)",
+  "services": [
+    {
+      "id": "dj_set",
+      "label": "DJ set",
+      "description": "DJ professionista con repertorio personalizzabile: musica per ricevimento, taglio torta e serata danzante."
+    },
+    {
+      "id": "musica_live",
+      "label": "Musica live",
+      "description": "Musicisti dal vivo (voce, sax, chitarra, duo o band) per cerimonia, aperitivo o cena."
+    },
+    {
+      "id": "luci",
+      "label": "Impianto luci",
+      "description": "Allestimento luci per pista da ballo e scenografia luminosa della location."
+    },
+    {
+      "id": "impianto_audio",
+      "label": "Impianto audio",
+      "description": "Impianto audio professionale dimensionato sul numero di ospiti e sugli spazi della location, con microfoni per discorsi."
+    }
+  ],
+  "faq": [
+    {
+      "q": "Portate voi l'attrezzatura?",
+      "a": "Sì, portiamo tutta l'attrezzatura necessaria: impianto audio, luci e strumentazione. L'allestimento e lo smontaggio sono inclusi nel servizio."
+    },
+    {
+      "q": "Suonate anche durante la cerimonia?",
+      "a": "Sì, possiamo accompagnare anche la cerimonia (in chiesa o civile) con musica live o in diffusione."
+    },
+    {
+      "q": "Possiamo scegliere noi la musica?",
+      "a": "Assolutamente sì: prima dell'evento concordiamo insieme playlist, generi e brani speciali (primo ballo, taglio torta, ingressi)."
+    },
+    {
+      "q": "Come funziona il preventivo?",
+      "a": "Raccogliamo i dettagli del tuo evento e il titolare prepara un preventivo su misura, senza impegno. Ti rispondiamo di solito entro poche ore."
+    },
+    {
+      "q": "Serve un acconto per confermare?",
+      "a": "Alla conferma chiediamo un acconto; il saldo si regola a ridosso dell'evento. I dettagli sono indicati nel preventivo."
+    }
+  ],
+  "tone": "informale ma professionale, dare del tu"
+}
