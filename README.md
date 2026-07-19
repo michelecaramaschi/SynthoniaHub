@@ -76,11 +76,14 @@ Lo scenario passo-passo completo è in [`test/e2e-scenario.md`](test/e2e-scenari
 Test automatici (senza chiave API): `npm test` — firma webhook, state machine,
 comandi titolare, flusso di approvazione, endpoint webhook.
 
-## Provalo sul numero WhatsApp vero, ma in locale (ngrok)
+## Provalo sul numero WhatsApp vero, ma in locale (tunnel)
 
 Vuoi vedere il bot rispondere sul numero business reale **senza ancora un
 hosting**? Puoi tenere il server sul tuo computer ed esporlo con un tunnel
-gratuito (ngrok). Guida passo-passo: [`docs/test-locale-ngrok.md`](docs/test-locale-ngrok.md).
+gratuito. Due guide passo-passo:
+
+- **[Cloudflare Tunnel](docs/test-locale-cloudflare.md)** — per un test veloce non serve alcun account
+- **[ngrok](docs/test-locale-ngrok.md)** — alternativa, richiede un account gratuito
 
 È perfetto per la prima prova; per l'uso quotidiano dell'azienda serve però un
 hosting sempre acceso (sotto).
