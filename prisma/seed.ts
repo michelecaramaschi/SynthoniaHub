@@ -13,6 +13,18 @@ async function main() {
   await prisma.whatsAppWebhookLog.deleteMany();
   await prisma.user.deleteMany();
 
+  // Create system user for internal operations
+  const systemUser = await prisma.user.create({
+    data: {
+      id: 'system',
+      email: 'system@synthonia.com',
+      password: 'system',
+      name: 'System',
+      role: 'ADMIN' as Role,
+      status: 'ACTIVE',
+    },
+  });
+
   // Create users
   const admin = await prisma.user.create({
     data: {
