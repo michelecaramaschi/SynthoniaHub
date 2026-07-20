@@ -1,0 +1,213 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String   @id @default(cuid())
+  email                 String   @unique
+  name                  String
+  password              String?
+  role                  Role     @default(STAFF)
+  status                Status   @default(ACTIVE)
+  whatsappPhone         String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  assignedRequests      ClientRequest[]
+  createdTimeline       RequestTimeline[]
+  createdFinancial      FinancialData[]
+  createdChecklists     DailyChecklist[]
+  completedChecklists   ChecklistCompletion[]
+  webhookLogs           WhatsAppWebhookLog[]
+
+  @@index([email])
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  STAFF
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+model ClientRequest {
+  id                String   @id @default(cuid())
+  whatsappMessageId String   @unique
+  clientPhone       String
+  clientName        String
+  requestType       RequestType
+  status            RequestStatus @default(RECEIVED)
+  content           String
+  extractedData     Json?
+  assignedUserId    String?
+  priority          Priority   @default(MEDIUM)
+  estimatedValue    Float?
+  completedAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  archivedAt        DateTime?
+
+  assignedUser      User?           @relation(fields: [assignedUserId], references: [id])
+  timeline          RequestTimeline[]
+
+  @@index([clientPhone])
+  @@index([status])
+  @@index([assignedUserId])
+  @@index([createdAt])
+}
+
+enum RequestType {
+  QUOTE
+  BOOKING
+  SUPPORT
+  OTHER
+}
+
+enum RequestStatus {
+  RECEIVED
+  PROCESSING
+  COMPLETED
+  ARCHIVED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model RequestTimeline {
+  id                String   @id @default(cuid())
+  requestId         String
+  eventType         EventType
+  details           Json?
+  createdByUserId   String
+  createdAt         DateTime @default(now())
+
+  request           ClientRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  createdByUser     User          @relation(fields: [createdByUserId], references: [id])
+
+  @@index([requestId])
+  @@index([createdByUserId])
+}
+
+enum EventType {
+  RECEIVED
+  VIEWED
+  ASSIGNED
+  STATUS_CHANGED
+  COMMENTED
+  CLOSED
+}
+
+model FinancialData {
+  id                String   @id @default(cuid())
+  date              DateTime
+  totalCash         Float
+  budgetAllocated   Float
+  budgetUsed        Float
+  projectedRevenue  Float
+  notes             String?
+  createdById       String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  createdBy         User @relation(fields: [createdById], references: [id])
+
+  @@unique([date])
+  @@index([date])
+  @@index([createdById])
+}
+
+model DailyChecklist {
+  id                String   @id @default(cuid())
+  date              DateTime
+  createdById       String
+  items             Json     // Array of { id, text, completed, completedAt }
+  status            ChecklistStatus @default(PENDING)
+  completedAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  createdBy         User @relation(fields: [createdById], references: [id])
+
+  @@unique([date])
+  @@index([date])
+}
+
+enum ChecklistStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+model FormulaCheck {
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  checkItems        Json     // Array of { id, text, required }
+  frequency         Frequency
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  completions       ChecklistCompletion[]
+
+  @@index([isActive])
+}
+
+enum Frequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  AS_NEEDED
+}
+
+model ChecklistCompletion {
+  id                String   @id @default(cuid())
+  formulaCheckId    String
+  completedById     String
+  completedItems    Json     // Array of { itemId, completed, completedAt }
+  notes             String?
+  passedValidation  Boolean  @default(true)
+  completedAt       DateTime
+  createdAt         DateTime @default(now())
+
+  formulaCheck      FormulaCheck @relation(fields: [formulaCheckId], references: [id], onDelete: Cascade)
+  completedBy       User         @relation(fields: [completedById], references: [id])
+
+  @@index([formulaCheckId])
+  @@index([completedById])
+}
+
+model WhatsAppWebhookLog {
+  id                String   @id @default(cuid())
+  webhookType       WebhookType
+  payload           Json
+  processed         Boolean  @default(false)
+  error             String?
+  processedById     String?
+  createdAt         DateTime @default(now())
+
+  processedBy       User?    @relation(fields: [processedById], references: [id])
+
+  @@index([webhookType])
+  @@index([processed])
+  @@index([createdAt])
+}
+
+enum WebhookType {
+  MESSAGE
+  STATUS
+  ERROR
+}
