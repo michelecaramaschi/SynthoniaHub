@@ -48,21 +48,21 @@ export function ownerNotification(
   aiSummary?: string,
 ): string {
   const lines = [
-    `🎧 NUOVA RICHIESTA DI PREVENTIVO #${request.id}`,
+    `NUOVA RICHIESTA DI PREVENTIVO #${request.id}`,
     "",
-    `👤 Cliente: ${request.customer_name ?? "nome non fornito"} (+${request.customer_phone})`,
-    `🎉 Evento: ${eventTypeLabel(request.event_type)}`,
-    `📅 Data: ${formatDate(request)}`,
-    `📍 Luogo: ${request.location ?? "da definire"}`,
-    `👥 Ospiti: ${request.guest_count ?? "da definire"}`,
-    `🎵 Servizi: ${serviceLabels(request.services, business)}`,
-    `⏱ Durata: ${request.duration_hours != null ? `${request.duration_hours} ore` : "da definire"}`,
+    `Cliente: ${request.customer_name ?? "nome non fornito"} (+${request.customer_phone})`,
+    `Evento: ${eventTypeLabel(request.event_type)}`,
+    `Data: ${formatDate(request)}`,
+    `Luogo: ${request.location ?? "da definire"}`,
+    `Ospiti: ${request.guest_count ?? "da definire"}`,
+    `Servizi: ${serviceLabels(request.services, business)}`,
+    `Durata: ${request.duration_hours != null ? `${request.duration_hours} ore` : "da definire"}`,
   ];
   if (request.special_requests) {
-    lines.push(`📝 Note: ${request.special_requests}`);
+    lines.push(`Note: ${request.special_requests}`);
   }
   if (aiSummary) {
-    lines.push("", `💬 Riepilogo: ${aiSummary}`);
+    lines.push("", `Riepilogo: ${aiSummary}`);
   }
   lines.push(
     "",
@@ -79,36 +79,75 @@ export function ownerNotification(
 export function quoteMessage(
   request: QuoteRequest,
   business: BusinessProfile,
+  confirmUrl?: string,
 ): string {
   if (request.price_eur == null) {
     throw new Error(`Quote request #${request.id} has no price set`);
   }
   const firstName = request.customer_name?.split(" ")[0];
   const lines = [
-    firstName ? `Ciao ${firstName}! 🎶` : "Ciao! 🎶",
+    firstName ? `Ciao ${firstName},` : "Ciao,",
     "",
-    "Grazie per averci contattato. Ecco il preventivo per il tuo evento:",
+    "grazie per averci contattato. Ecco il preventivo per il tuo evento:",
     "",
-    `✨ ${eventTypeLabel(request.event_type)} — ${formatDate(request)}`,
-    `📍 ${request.location ?? "località da definire"}`,
-    `🎵 Servizi: ${serviceLabels(request.services, business)}`,
+    `Evento: ${eventTypeLabel(request.event_type)} — ${formatDate(request)}`,
+    `Luogo: ${request.location ?? "località da definire"}`,
+    `Servizi: ${serviceLabels(request.services, business)}`,
   ];
   if (request.duration_hours != null) {
-    lines.push(`⏱ Durata: ${request.duration_hours} ore`);
+    lines.push(`Durata: ${request.duration_hours} ore`);
   }
   if (request.owner_notes) {
-    lines.push(`ℹ️ ${request.owner_notes.split("\n").join("\nℹ️ ")}`);
+    lines.push("", request.owner_notes);
   }
   lines.push(
     "",
-    `💶 Totale: ${formatPrice(request.price_eur)} €`,
+    `Totale: ${formatPrice(request.price_eur)} €`,
     "",
     "Il preventivo è valido 30 giorni e comprende attrezzatura, allestimento e assistenza tecnica per tutta la durata dell'evento.",
-    "",
-    "Per confermare o per qualsiasi domanda rispondi pure a questo messaggio: siamo a tua disposizione!",
-    "",
-    `${business.name} — Musica ed eventi`,
   );
+  if (confirmUrl) {
+    lines.push(
+      "",
+      "Per accettarlo ti basta un clic:",
+      confirmUrl,
+      "",
+      "Per qualsiasi domanda rispondi pure a questo messaggio, siamo a tua disposizione.",
+    );
+  } else {
+    lines.push(
+      "",
+      "Per confermare o per qualsiasi domanda rispondi pure a questo messaggio, siamo a tua disposizione.",
+    );
+  }
+  lines.push("", `${business.name} — Musica ed eventi`);
+  return lines.join("\n");
+}
+
+/** Alert sent to the owner the moment a customer accepts a quote from the PDF link. */
+export function confirmationNotification(
+  request: QuoteRequest,
+  business: BusinessProfile,
+): string {
+  const lines = [
+    `PREVENTIVO #${request.id} CONFERMATO ✅`,
+    "",
+    `Cliente: ${request.customer_name ?? "nome non fornito"} (+${request.customer_phone})`,
+    `Evento: ${eventTypeLabel(request.event_type)}`,
+    `Data: ${request.event_date ?? request.event_date_raw ?? "da definire"}`,
+    `Luogo: ${request.location ?? "da definire"}`,
+    `Servizi: ${serviceLabels(request.services, business)}`,
+  ];
+  if (request.price_eur != null) {
+    lines.push(`Importo: ${formatPrice(request.price_eur)} €`);
+  }
+  if (request.confirmed_name) {
+    lines.push(`Confermato da: ${request.confirmed_name}`);
+  }
+  if (request.confirmed_notes) {
+    lines.push(`Note del cliente: ${request.confirmed_notes}`);
+  }
+  lines.push("", "La richiesta è stata segnata come vinta.");
   return lines.join("\n");
 }
 
@@ -127,7 +166,7 @@ export function declineMessage(
       ? `Purtroppo per questa data non riusciamo a garantirti il servizio: ${reason}.`
       : "Purtroppo per questa data non riusciamo a garantirti il servizio.",
     "",
-    "Speriamo di poter collaborare in una prossima occasione!",
+    "Speriamo di poter collaborare in una prossima occasione.",
     "",
     `${business.name} — Musica ed eventi`,
   ];
@@ -147,32 +186,32 @@ export type InterviewField =
   | "special_requests";
 
 export function greeting(business: BusinessProfile): string {
-  return `Ciao! Sono l'assistente di ${business.name} 🎶 Ti aiuto a richiedere un preventivo su misura per il tuo evento: bastano poche domande.`;
+  return `Ciao, sono l'assistente di ${business.name}. Ti aiuto a richiedere un preventivo su misura per il tuo evento: bastano poche domande.`;
 }
 
 export function fieldQuestion(field: InterviewField): string {
   switch (field) {
     case "event_type":
-      return "Che tipo di evento stai organizzando? Un matrimonio, una festa privata o un evento pubblico? 🎉";
+      return "Che tipo di evento stai organizzando? Un matrimonio, una festa privata o un evento pubblico?";
     case "event_date":
-      return "Quando si terrà l'evento? Se hai già la data esatta, ancora meglio! 📅";
+      return "Quando si terrà l'evento? Se hai già la data esatta, ancora meglio.";
     case "location":
-      return "Dove si svolgerà? Scrivimi la location e la città. 📍";
+      return "Dove si svolgerà? Scrivimi la location e la città.";
     case "guest_count":
-      return "Quanti invitati sarete, più o meno? 👥";
+      return "Quanti invitati sarete, più o meno?";
     case "services":
-      return "Quali servizi ti interessano? DJ set, musica live, luci, impianto audio… puoi sceglierne anche più di uno. 🎵";
+      return "Quali servizi ti interessano? DJ set, musica live, luci, impianto audio: puoi sceglierne anche più di uno.";
     case "duration_hours":
-      return 'Per quante ore indicativamente ti serve il servizio? (es. "6 ore" oppure "dalle 19 all\'1") ⏱';
+      return 'Per quante ore indicativamente ti serve il servizio? (es. "6 ore" oppure "dalle 19 all\'1")';
     case "customer_name":
-      return "Perfetto, ci siamo quasi! Come ti chiami?";
+      return "Siamo quasi alla fine. Come ti chiami?";
     case "special_requests":
-      return 'Ultima cosa: hai richieste particolari? (brani speciali, momenti da accompagnare…) Se no, scrivi pure "no".';
+      return 'Ultima cosa: hai richieste particolari? (brani speciali, momenti da accompagnare) Se no, scrivi pure "no".';
   }
 }
 
 export function priceQuestionReply(): string {
-  return "Per i prezzi: ogni preventivo è su misura, quindi non ho un listino da darti. Appena ho tutti i dettagli, il titolare ti manda la sua proposta personalizzata, senza impegno. 😊";
+  return "Per i prezzi: ogni preventivo è su misura, quindi non ho un listino da darti. Appena ho tutti i dettagli, il titolare ti manda la sua proposta personalizzata, senza impegno.";
 }
 
 export function collectionCompleteMessage(
@@ -181,21 +220,22 @@ export function collectionCompleteMessage(
 ): string {
   const firstName = request.customer_name?.split(" ")[0];
   const recap = [
-    `✨ ${eventTypeLabel(request.event_type)} — ${request.event_date ?? request.event_date_raw ?? "data da definire"}`,
-    `📍 ${request.location ?? "da definire"}`,
-    `👥 ${request.guest_count ?? "?"} ospiti`,
-    `🎵 ${serviceLabels(request.services, business)}`,
-    `⏱ ${request.duration_hours ?? "?"} ore`,
+    `Evento: ${eventTypeLabel(request.event_type)} — ${request.event_date ?? request.event_date_raw ?? "data da definire"}`,
+    `Luogo: ${request.location ?? "da definire"}`,
+    `Ospiti: ${request.guest_count ?? "da definire"}`,
+    `Servizi: ${serviceLabels(request.services, business)}`,
+    `Durata: ${request.duration_hours != null ? `${request.duration_hours} ore` : "da definire"}`,
   ].join("\n");
-  return `Grazie ${firstName ?? ""}! 🙏 Ecco il riepilogo della tua richiesta:\n\n${recap}\n\nHo inoltrato tutto al titolare: riceverai il preventivo su misura al più presto, di solito entro poche ore. 🎧`;
+  const thanks = firstName ? `Grazie ${firstName}.` : "Grazie.";
+  return `${thanks} Ecco il riepilogo della tua richiesta:\n\n${recap}\n\nHo inoltrato tutto al titolare: riceverai il preventivo su misura al più presto, di solito entro poche ore.`;
 }
 
 /** Reply to customer messages after the request was handed to the owner. */
 export function afterHandoffReply(status: string): string {
   if (status === "quoted") {
-    return "Grazie del messaggio! 🎶 Il tuo preventivo è già stato inviato: ho girato la tua richiesta al titolare, che ti risponderà direttamente qui.";
+    return "Grazie del messaggio. Il tuo preventivo è già stato inviato: ho girato la tua richiesta al titolare, che ti risponderà direttamente qui.";
   }
-  return "Grazie del messaggio! 🎶 Il tuo preventivo è in preparazione: ho girato la tua nota al titolare, ti risponderà al più presto.";
+  return "Grazie del messaggio. Il tuo preventivo è in preparazione: ho girato la tua nota al titolare, ti risponderà al più presto.";
 }
 
 /** Forward of a post-handoff customer message to the owner. */
@@ -203,16 +243,16 @@ export function forwardToOwner(
   request: QuoteRequest,
   text: string,
 ): string {
-  return `💬 Messaggio da ${request.customer_name ?? "cliente"} (+${request.customer_phone}) sulla richiesta #${request.id}:\n«${text}»`;
+  return `Messaggio da ${request.customer_name ?? "cliente"} (+${request.customer_phone}) sulla richiesta #${request.id}:\n«${text}»`;
 }
 
 /** Fallback when message processing fails unexpectedly. */
 export const AI_UNAVAILABLE_MESSAGE =
-  "Grazie per il tuo messaggio! 🎶 In questo momento non riusciamo a risponderti automaticamente, ma ti ricontattiamo al più presto.";
+  "Grazie per il tuo messaggio. In questo momento non riusciamo a risponderti automaticamente, ma ti ricontattiamo al più presto.";
 
 /** Reply for non-text messages (audio, images, ...). */
 export const UNSUPPORTED_MEDIA_MESSAGE =
-  "Al momento riesco a leggere solo messaggi di testo 🙏 Puoi scrivermi i dettagli del tuo evento?";
+  "Al momento riesco a leggere solo messaggi di testo. Puoi scrivermi i dettagli del tuo evento?";
 
 export function ownerHelp(): string {
   return [

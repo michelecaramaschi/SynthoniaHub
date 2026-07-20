@@ -17,8 +17,14 @@ const messageRepo = new MessageRepository(db);
 const provider = new MetaProvider(config.whatsappToken!, config.phoneNumberId!);
 const router = new Router({ config, quoteRepo, messageRepo, provider });
 
-const app = createApp(config, router);
+const app = createApp(config, router, {
+  config,
+  quoteRepo,
+  messageRepo,
+  provider,
+});
 app.listen(config.port, () => {
   console.log(`SynthoniaHub in ascolto sulla porta ${config.port}`);
   console.log(`Webhook: POST /webhook — verifica: GET /webhook`);
+  console.log(`Conferma preventivi: ${config.publicBaseUrl}/conferma/<token>`);
 });

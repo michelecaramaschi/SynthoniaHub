@@ -310,7 +310,7 @@ export function runGuidedTurn(params: {
 
   if (missing.length > 0) {
     const nextField = missing[0]!;
-    if (!isFirstMessage && extractedSomething) parts.push("Perfetto, segnato! 👌");
+    if (!isFirstMessage && extractedSomething) parts.push("Perfetto, segnato.");
     parts.push(fieldQuestion(nextField));
     quoteRepo.patch(request.id, { awaiting_field: nextField });
     return { reply: parts.join("\n\n"), completed: false };

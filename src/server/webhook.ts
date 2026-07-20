@@ -25,14 +25,19 @@ export function createWebhookRouter(
   webhookRouter.post("/", (req, res) => {
     const rawBody = (req as express.Request & { rawBody?: Buffer }).rawBody;
     const signature = req.header("X-Hub-Signature-256");
+    console.log(
+      `[webhook] POST ricevuto — rawBody: ${rawBody ? rawBody.length + " byte" : "assente"}, firma: ${signature ? "presente" : "assente"}`,
+    );
     if (
       !rawBody ||
       !config.appSecret ||
       !verifyMetaSignature(rawBody, signature, config.appSecret)
     ) {
+      console.log("[webhook] 401 — firma non valida o APP_SECRET errato");
       res.sendStatus(401);
       return;
     }
+    console.log("[webhook] firma valida ✓");
 
     // Ack immediately: Meta retries slow webhooks, and Claude calls take seconds.
     res.sendStatus(200);

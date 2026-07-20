@@ -77,7 +77,7 @@ export async function runCustomerTurn(params: {
     .trim();
 
   return {
-    reply: reply || "Grazie del messaggio! Ti rispondo subito. 🎶",
+    reply: reply || "Grazie del messaggio. Ti rispondo subito.",
     completed: customerTools.isComplete(),
     summaryForOwner: customerTools.summaryForOwner(),
   };

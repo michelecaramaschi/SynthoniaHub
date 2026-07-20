@@ -46,7 +46,7 @@ let identity: { kind: "customer" | "owner"; phone: string } = {
   phone: customerPhone(1),
 };
 
-console.log("🎧 Simulatore SynthoniaHub");
+console.log("Simulatore SynthoniaHub");
 console.log(
   `Modalità conversazione: ${config.aiEnabled ? "AI (Claude)" : "flusso guidato (nessuna API)"}`,
 );

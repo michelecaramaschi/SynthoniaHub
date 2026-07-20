@@ -14,6 +14,7 @@ import {
   ownerNotification,
   quoteMessage,
 } from "./templates.js";
+import { confirmationUrl } from "../quote/pdf.js";
 
 export interface OwnerFlowDeps {
   config: AppConfig;
@@ -49,7 +50,7 @@ export async function handleOwnerMessage(
   if (!command) {
     await deps.provider.sendText(
       deps.config.ownerPhone,
-      `Non ho riconosciuto il comando. 🤔\n\n${ownerHelp()}`,
+      `Non ho riconosciuto il comando.\n\n${ownerHelp()}`,
     );
     deps.messageRepo.recordOutbound(null, "help");
     return;
@@ -70,7 +71,7 @@ async function executeOwnerCommand(
   if (command.action === "list") {
     const open = quoteRepo.listByStatus(["pending_owner", "quoted"]);
     if (open.length === 0) {
-      await replyToOwner("Nessuna richiesta aperta al momento. ✅");
+      await replyToOwner("Nessuna richiesta aperta al momento.");
       return;
     }
     const lines = open.map((r) => {
@@ -112,7 +113,7 @@ async function executeOwnerCommand(
           `Nota aggiunta alla richiesta #${request.id}.\n\nAnteprima aggiornata:\n────────────\n${preview}\n────────────\nRispondi "${request.id} ok" per inviare.`,
         );
       } else {
-        await replyToOwner(`Nota aggiunta alla richiesta #${request.id}. ✅`);
+        await replyToOwner(`Nota aggiunta alla richiesta #${request.id}.`);
       }
       return;
     }
@@ -130,12 +131,14 @@ async function executeOwnerCommand(
         );
         return;
       }
-      const body = quoteMessage(request, config.business);
+      const token = quoteRepo.ensureConfirmationToken(request.id);
+      const confirmUrl = confirmationUrl(config.publicBaseUrl, token);
+      const body = quoteMessage(request, config.business, confirmUrl);
       await provider.sendText(request.customer_phone, body);
       messageRepo.recordOutbound(request.id, body);
       quoteRepo.transition(request.id, "quoted");
       await replyToOwner(
-        `Preventivo #${request.id} inviato a ${request.customer_name ?? request.customer_phone}. ✅\nQuando hai novità: "${request.id} vinto" oppure "${request.id} perso".`,
+        `Preventivo #${request.id} inviato a ${request.customer_name ?? request.customer_phone}.\nIl cliente può confermarlo da solo: quando lo fa ricevi una notifica qui e la richiesta passa a "vinta".\nPuoi comunque chiuderla a mano: "${request.id} vinto" oppure "${request.id} perso".`,
       );
       return;
     }
@@ -157,7 +160,7 @@ async function executeOwnerCommand(
 
     case "mark_won": {
       quoteRepo.transition(request.id, "won");
-      await replyToOwner(`Fantastico! 🎉 Richiesta #${request.id} segnata come vinta.`);
+      await replyToOwner(`Richiesta #${request.id} segnata come vinta.`);
       return;
     }
 

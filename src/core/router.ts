@@ -136,7 +136,7 @@ export class Router {
       console.error(`Customer turn failed for +${event.from}:`, error);
       await this.trySend(
         config.ownerPhone,
-        `⚠️ Errore nell'elaborazione del messaggio di +${event.from} (richiesta #${request.id}). Controlla la conversazione appena puoi.`,
+        `Errore nell'elaborazione del messaggio di +${event.from} (richiesta #${request.id}). Controlla la conversazione appena puoi.`,
       );
     }
   }

@@ -1,4 +1,5 @@
 import type Database from "better-sqlite3";
+import { randomUUID } from "node:crypto";
 import {
   assertTransition,
   OPEN_STATUSES,
@@ -21,6 +22,10 @@ export interface QuoteRequest {
   price_eur: number | null;
   owner_notes: string | null;
   awaiting_field: string | null;
+  confirmation_token: string | null;
+  confirmed_at: string | null;
+  confirmed_name: string | null;
+  confirmed_notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -123,6 +128,68 @@ export class QuoteRequestRepository {
       )
       .run(to, id);
     return this.getById(id)!;
+  }
+
+  getByConfirmationToken(token: string): QuoteRequest | null {
+    const row = this.db
+      .prepare("SELECT * FROM quote_requests WHERE confirmation_token = ?")
+      .get(token) as QuoteRow | undefined;
+    return row ? rowToRequest(row) : null;
+  }
+
+  /** Returns the existing token when one was already issued, so re-sending a quote keeps the same link. */
+  ensureConfirmationToken(id: number): string {
+    const current = this.getById(id);
+    if (!current) throw new Error(`Quote request #${id} not found`);
+    if (current.confirmation_token) return current.confirmation_token;
+
+    const token = randomUUID();
+    this.db
+      .prepare(
+        "UPDATE quote_requests SET confirmation_token = ?, updated_at = datetime('now') WHERE id = ?",
+      )
+      .run(token, id);
+    return token;
+  }
+
+  /**
+   * Records the customer's acceptance and moves the request to `won`.
+   * Runs in a transaction and re-checks the status inside it, so two clicks on
+   * the same link cannot produce a double confirmation.
+   */
+  confirmByToken(
+    token: string,
+    details: { name?: string; notes?: string } = {},
+  ): { outcome: "confirmed" | "already_confirmed" | "not_found" | "not_confirmable"; request: QuoteRequest | null } {
+    const run = this.db.transaction(() => {
+      const row = this.db
+        .prepare("SELECT * FROM quote_requests WHERE confirmation_token = ?")
+        .get(token) as QuoteRow | undefined;
+      if (!row) return { outcome: "not_found" as const, request: null };
+
+      const request = rowToRequest(row);
+      if (request.status === "won") {
+        return { outcome: "already_confirmed" as const, request };
+      }
+      if (request.status !== "quoted") {
+        return { outcome: "not_confirmable" as const, request };
+      }
+
+      this.db
+        .prepare(
+          `UPDATE quote_requests
+           SET status = 'won',
+               confirmed_at = datetime('now'),
+               confirmed_name = ?,
+               confirmed_notes = ?,
+               updated_at = datetime('now')
+           WHERE id = ?`,
+        )
+        .run(details.name ?? null, details.notes ?? null, request.id);
+
+      return { outcome: "confirmed" as const, request: this.getById(request.id)! };
+    });
+    return run();
   }
 
   listByStatus(statuses: QuoteStatus[]): QuoteRequest[] {

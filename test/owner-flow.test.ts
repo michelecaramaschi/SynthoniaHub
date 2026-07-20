@@ -84,7 +84,7 @@ describe("owner approval flow (regex commands, no AI)", () => {
     await handleOwnerMessage(deps, `${requestId} ok`);
     const toCustomer = sent.find((m) => m.to === CUSTOMER);
     expect(toCustomer).toBeDefined();
-    expect(toCustomer!.body).toContain("Ciao Maria!");
+    expect(toCustomer!.body).toContain("Ciao Maria,");
     expect(toCustomer!.body).toContain("1.200,50 €");
     expect(toCustomer!.body).toContain("Include tecnico del suono");
     expect(quoteRepo.getById(requestId)!.status).toBe("quoted");

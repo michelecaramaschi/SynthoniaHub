@@ -29,6 +29,8 @@ const envSchema = z.object({
   OWNER_PHONE: z.string().default("390000000000"),
   PORT: z.coerce.number().default(3000),
   DB_PATH: z.string().default("./data/synthonia.db"),
+  // Public origin the customer's browser reaches: used to build confirmation links.
+  PUBLIC_BASE_URL: z.string().url().default("http://localhost:3000"),
 });
 
 export interface AppConfig {
@@ -42,6 +44,7 @@ export interface AppConfig {
   ownerPhone: string;
   port: number;
   dbPath: string;
+  publicBaseUrl: string;
   business: BusinessProfile;
 }
 
@@ -72,6 +75,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     ownerPhone: normalizePhone(e.OWNER_PHONE),
     port: e.PORT,
     dbPath: e.DB_PATH,
+    publicBaseUrl: e.PUBLIC_BASE_URL.replace(/\/+$/, ""),
     business,
   };
 }
