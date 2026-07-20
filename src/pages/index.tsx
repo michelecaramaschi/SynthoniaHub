@@ -3,6 +3,11 @@ import { Layout } from '@/components/Layout/Layout';
 import { ProtectedRoute } from '@/components/Common/ProtectedRoute';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/UI/Card';
 import { Badge } from '@/components/UI/Badge';
+import { CashWidget } from '@/components/Dashboard/CashWidget';
+import { BudgetWidget } from '@/components/Dashboard/BudgetWidget';
+import { RequestsMetrics } from '@/components/Dashboard/RequestsMetrics';
+import { DayCheckCard } from '@/components/Dashboard/DayCheckCard';
+import { FormulaCheckCard } from '@/components/Dashboard/FormulaCheckCard';
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -21,47 +26,21 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          {/* Quick Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Richieste Oggi</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-blue-600">0</p>
-                <p className="text-sm text-gray-600 mt-2">Nessuna richiesta ancora</p>
-              </CardContent>
-            </Card>
+          {/* Financial Widgets */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <CashWidget />
+            <BudgetWidget />
+          </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Cash Disponibile</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-green-600">€ 0</p>
-                <p className="text-sm text-gray-600 mt-2">Nessun dato</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Budget Utilizzato</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-yellow-600">0%</p>
-                <p className="text-sm text-gray-600 mt-2">Nessun dato</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Checklist Completate</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-purple-600">0</p>
-                <p className="text-sm text-gray-600 mt-2">Nessuna completata</p>
-              </CardContent>
-            </Card>
+          {/* Requests and Checklists */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1">
+              <RequestsMetrics />
+            </div>
+            <div className="lg:col-span-2 space-y-6">
+              <DayCheckCard />
+              <FormulaCheckCard />
+            </div>
           </div>
 
           {/* Info Cards */}
