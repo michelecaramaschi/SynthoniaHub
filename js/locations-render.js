@@ -37,7 +37,6 @@ function renderEventRows(container, locations) {
           <span>📍 ${loc.city}, ${loc.province}, ${loc.country}</span>
         </div>
       </div>
-      <a class="btn btn-outline" href="location.html?slug=${encodeURIComponent(loc.slug)}">Ulteriori informazioni</a>
     `;
     container.appendChild(row);
   });
