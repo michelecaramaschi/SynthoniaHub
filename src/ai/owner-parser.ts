@@ -9,7 +9,7 @@ const aiCommandSchema = z.object({
   action: z.enum([
     "set_price",
     "add_note",
-    "approve",
+    "mark_sent",
     "reject",
     "mark_won",
     "mark_lost",
@@ -48,10 +48,13 @@ export async function parseOwnerCommandWithAI(
     max_tokens: 1024,
     system:
       "Interpreti i messaggi del titolare di un'azienda di intrattenimento musicale che gestisce richieste di preventivo. " +
+      "Il titolare invia i preventivi al cliente DA SOLO su WhatsApp (il sistema non invia messaggi al cliente): " +
+      "prepara solo testo e PDF pronti da copiare/allegare. " +
       "Traduci il messaggio in un comando strutturato. Azioni possibili: " +
-      "set_price (imposta un prezzo), add_note (aggiunge una nota al preventivo), approve (approva e invia il preventivo), " +
+      "set_price (imposta un prezzo e genera testo+PDF), add_note (aggiunge una nota al preventivo), " +
+      "mark_sent (il titolare conferma di aver già inviato il preventivo al cliente lui stesso), " +
       "reject (declina la richiesta), mark_won (cliente ha confermato), mark_lost (cliente ha rifiutato), list (elenca richieste aperte), unknown. " +
-      "Se il titolare indica un prezzo E chiede di inviare nello stesso messaggio, scegli set_price: il sistema chiederà poi conferma. " +
+      "Se il titolare indica un prezzo E dice di aver già mandato il preventivo nello stesso messaggio, scegli set_price: il sistema chiederà poi conferma dell'invio. " +
       "Identifica request_id dal contesto delle richieste aperte; se ambiguo o non identificabile con certezza, usa null. " +
       "Se il messaggio non è un comando gestibile, usa action unknown.",
     messages: [
@@ -79,7 +82,7 @@ export async function parseOwnerCommandWithAI(
     case "add_note":
       if (parsed.request_id == null || !parsed.note) return null;
       return { action: "add_note", requestId: parsed.request_id, note: parsed.note };
-    case "approve":
+    case "mark_sent":
     case "reject":
     case "mark_won":
     case "mark_lost": {

@@ -3,6 +3,7 @@ import type { AppConfig } from "../config.js";
 import type { Router } from "../core/router.js";
 import { createWebhookRouter } from "./webhook.js";
 import { createConfirmRouter, type ConfirmDeps } from "./confirm.js";
+import { createPdfRouter, type PdfRouteDeps } from "./pdf-route.js";
 
 export function createApp(
   config: AppConfig,
@@ -30,6 +31,7 @@ export function createApp(
 
   if (confirmDeps) {
     app.use("/conferma", createConfirmRouter(confirmDeps));
+    app.use("/preventivo", createPdfRouter(confirmDeps));
   }
 
   return app;

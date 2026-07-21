@@ -75,10 +75,10 @@ export function ownerNotification(
   }
   lines.push(
     "",
-    "Per inviare il preventivo rispondi:",
-    `  ${request.id} prezzo 900`,
+    "Per preparare il preventivo rispondi:",
+    `  ${request.id} prezzo 900   → genera testo e PDF pronti da inviare tu`,
     `  ${request.id} nota Include allestimento luci base   (opzionale)`,
-    `  ${request.id} ok   → invia il preventivo al cliente`,
+    `  ${request.id} inviato   → segna la richiesta come inviata (dopo che l'hai mandata tu)`,
     `Altri comandi: ${request.id} rifiuta | lista`,
   );
   return lines.join("\n");
@@ -266,9 +266,9 @@ export const UNSUPPORTED_MEDIA_MESSAGE =
 export function ownerHelp(): string {
   return [
     "Comandi disponibili:",
-    "  <id> prezzo <importo>   → imposta il prezzo (es: 42 prezzo 900)",
+    "  <id> prezzo <importo>   → imposta il prezzo e genera testo + PDF da inviare tu (es: 42 prezzo 900)",
     "  <id> nota <testo>       → aggiunge una nota al preventivo",
-    "  <id> ok                 → invia il preventivo al cliente",
+    "  <id> inviato            → segna il preventivo come inviato (dopo che l'hai mandato tu)",
     "  <id> rifiuta <motivo?>  → declina la richiesta",
     "  <id> vinto | <id> perso → chiude una richiesta preventivata",
     "  lista                   → mostra le richieste aperte",

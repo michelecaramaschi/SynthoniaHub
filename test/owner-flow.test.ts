@@ -65,38 +65,46 @@ describe("owner approval flow (regex commands, no AI)", () => {
     expect(notification.body).toContain(`${requestId} prezzo`);
   });
 
-  it("runs the full price -> preview -> ok -> vinto flow", async () => {
-    // 1. Owner sets the price: gets a preview, nothing goes to the customer yet.
+  it("runs the full price -> preview -> inviato -> vinto flow, with the owner sending manually", async () => {
+    // 1. Owner sets the price: gets a preview with text + PDF link, ready to
+    // copy. Nothing is ever sent to the customer by the bot.
     await handleOwnerMessage(deps, `${requestId} prezzo 1.200,50`);
     expect(sent).toHaveLength(1);
     expect(sent[0]!.to).toBe(OWNER);
-    expect(sent[0]!.body).toContain("Anteprima");
+    expect(sent[0]!.body).toContain("Testo pronto da inviare al cliente");
+    expect(sent[0]!.body).toContain("Ciao Maria,");
     expect(sent[0]!.body).toContain("1.200,50 €");
+    expect(sent[0]!.body).toContain("PDF da scaricare e allegare");
     expect(quoteRepo.getById(requestId)!.status).toBe("pending_owner");
     expect(quoteRepo.getById(requestId)!.price_eur).toBe(1200.5);
 
-    // 2. Owner adds a note.
+    // 2. Owner adds a note: preview refreshes, still nothing to the customer.
     await handleOwnerMessage(deps, `${requestId} nota Include tecnico del suono`);
     expect(quoteRepo.getById(requestId)!.owner_notes).toBe("Include tecnico del suono");
+    expect(sent.every((m) => m.to === OWNER)).toBe(true);
 
-    // 3. Owner approves: the quote goes to the customer.
+    // 3. Owner has sent it themselves on WhatsApp, then confirms with "ok":
+    // the bot never talks to the customer, it only records the transition.
     sent.length = 0;
     await handleOwnerMessage(deps, `${requestId} ok`);
-    const toCustomer = sent.find((m) => m.to === CUSTOMER);
-    expect(toCustomer).toBeDefined();
-    expect(toCustomer!.body).toContain("Ciao Maria,");
-    expect(toCustomer!.body).toContain("1.200,50 €");
-    expect(toCustomer!.body).toContain("Include tecnico del suono");
-    expect(quoteRepo.getById(requestId)!.status).toBe("quoted");
+    expect(sent.find((m) => m.to === CUSTOMER)).toBeUndefined();
     const confirmation = sent.find((m) => m.to === OWNER);
-    expect(confirmation!.body).toContain("inviato");
+    expect(confirmation!.body).toContain("segnata come inviata");
+    expect(quoteRepo.getById(requestId)!.status).toBe("quoted");
 
     // 4. Owner closes the deal.
     await handleOwnerMessage(deps, `${requestId} vinto`);
     expect(quoteRepo.getById(requestId)!.status).toBe("won");
   });
 
-  it("refuses to approve without a price", async () => {
+  it("accepts 'inviato' as an alias for 'ok'", async () => {
+    await handleOwnerMessage(deps, `${requestId} prezzo 900`);
+    sent.length = 0;
+    await handleOwnerMessage(deps, `${requestId} inviato`);
+    expect(quoteRepo.getById(requestId)!.status).toBe("quoted");
+  });
+
+  it("refuses to mark as sent without a price", async () => {
     await handleOwnerMessage(deps, `${requestId} ok`);
     expect(sent).toHaveLength(1);
     expect(sent[0]!.to).toBe(OWNER);

@@ -3,8 +3,9 @@
 Sistema di automazione per **Synthonia** (intrattenimento musicale per matrimoni,
 feste ed eventi): risponde subito ai clienti che scrivono su WhatsApp, raccoglie
 i dettagli dell'evento e prepara la richiesta di preventivo. **Il prezzo lo decidi
-sempre tu**: il sistema ti notifica su WhatsApp, tu rispondi con il prezzo,
-controlli l'anteprima e approvi l'invio.
+sempre tu, e sei tu a inviare il preventivo**: il sistema ti notifica su WhatsApp,
+tu rispondi con il prezzo e ricevi testo e PDF già pronti, che copi/allega e mandi
+al cliente come preferisci (con eventuale disponibilità, extra o listino a voce).
 
 ## Come funziona
 
@@ -13,31 +14,37 @@ Cliente su WhatsApp ──▶ Il bot raccoglie: tipo evento, data, luogo,
                         ospiti, servizi, durata, richieste speciali
                               │ quando è tutto completo
                               ▼
-Titolare su WhatsApp ◀── 🎧 NUOVA RICHIESTA DI PREVENTIVO #42 (riepilogo)
+Titolare su WhatsApp ◀── NUOVA RICHIESTA DI PREVENTIVO #42 (riepilogo)
         │
-        │  42 prezzo 900      → anteprima del preventivo
+        │  42 prezzo 900      → testo pronto da copiare + link al PDF
         │  42 nota <testo>    → aggiunge una riga al preventivo (opzionale)
-        │  42 ok              → il preventivo parte verso il cliente
         ▼
-Cliente riceve il preventivo formattato + link di conferma
+Titolare invia lui stesso il preventivo al cliente su WhatsApp
+(può allegare il PDF, aggiungere disponibilità, extra del pacchetto...)
+        │
+        │  42 inviato         → registra che il preventivo è stato mandato
+        ▼
+Cliente riceve il preventivo con link di conferma
         │  clic sul link (o QR code sul PDF) → accetta il preventivo
         ▼
-Titolare ◀── ✅ PREVENTIVO #42 CONFERMATO   (richiesta segnata "vinta" in automatico)
+Titolare ◀── PREVENTIVO #42 CONFERMATO   (richiesta segnata "vinta" in automatico)
 ```
 
 Regole fisse del bot: **mai prezzi o stime** (ogni preventivo è su misura), mai
-disponibilità inventate.
+disponibilità inventate, **mai invii al cliente per conto del titolare**.
 
 ## Conferma del preventivo con un clic
 
-Quando il preventivo parte, il cliente riceve anche un **link di conferma**
-univoco (e un **QR code** se gli mandi il PDF). Aprendolo vede il riepilogo con
-il totale e un pulsante: al clic, la richiesta passa in automatico a **"vinta"**
-nel database e **ricevi la notifica su WhatsApp** con nome ed eventuali note del
-cliente — senza che tu debba scrivere `42 vinto` a mano.
+Il testo che ricevi con `42 prezzo <importo>` include già un **link di conferma**
+univoco, e il PDF scaricabile lo stesso link come QR code. Quando il cliente lo
+apre vede il riepilogo con il totale e un pulsante: al clic, la richiesta passa
+in automatico a **"vinta"** nel database e **ricevi la notifica su WhatsApp** con
+nome ed eventuali note del cliente — senza che tu debba scrivere `42 vinto` a mano.
 
 - La pagina di conferma è servita da `GET/POST /conferma/<token>`; il token è
   casuale e non rivela l'id progressivo della richiesta.
+- Il PDF si scarica da `GET /preventivo/<token>` (stesso token, stessa pagina
+  protetta) — apri il link, salva il file e allegalo tu su WhatsApp.
 - La conferma è **idempotente**: un secondo clic non registra nulla di nuovo e
   non ti invia una seconda notifica.
 - Puoi comunque chiudere la richiesta a mano (`42 vinto` / `42 perso`) come prima.
@@ -66,16 +73,20 @@ All'avvio il sistema (e il simulatore) ti dice quale modalità è attiva.
 
 | Comando | Effetto |
 |---|---|
-| `42 prezzo 900` (anche `€900`, `900,50`, `1.200`) | imposta il prezzo e mostra l'anteprima |
-| `42 nota Include tecnico del suono` | aggiunge una riga informativa al preventivo |
-| `42 ok` | invia il preventivo al cliente |
-| `42 rifiuta <motivo?>` | declina con messaggio cortese al cliente |
+| `42 prezzo 900` (anche `€900`, `900,50`, `1.200`) | imposta il prezzo e genera testo + link PDF pronti da inviare tu |
+| `42 nota Include tecnico del suono` | aggiunge una riga informativa al preventivo, rigenera l'anteprima |
+| `42 ok` (o `42 inviato`) | registra che hai già mandato il preventivo al cliente — **non invia nulla** |
+| `42 rifiuta <motivo?>` | declina con messaggio cortese al cliente (questo lo manda il bot) |
 | `42 vinto` / `42 perso` | chiude la richiesta dopo l'esito |
 | `lista` | elenca le richieste aperte |
 
 I comandi funzionano sempre. In modalità AI puoi anche scrivere in linguaggio
 naturale ("per il matrimonio di Giulia direi 900 euro") e il sistema lo
 interpreta; in modalità guidata usa i comandi qui sopra.
+
+**Solo il rifiuto (`rifiuta`) viene inviato in automatico al cliente.** Il
+preventivo vero e proprio no: lo mandi sempre tu, così puoi allegare il PDF,
+proporre disponibilità reali o servizi extra non gestiti dal bot.
 
 ## Provalo subito senza WhatsApp (simulatore)
 

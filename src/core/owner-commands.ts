@@ -1,7 +1,7 @@
 export type OwnerCommand =
   | { action: "set_price"; requestId: number; priceEur: number }
   | { action: "add_note"; requestId: number; note: string }
-  | { action: "approve"; requestId: number }
+  | { action: "mark_sent"; requestId: number }
   | { action: "reject"; requestId: number; reason?: string }
   | { action: "mark_won"; requestId: number }
   | { action: "mark_lost"; requestId: number }
@@ -37,9 +37,14 @@ export function parseOwnerCommand(text: string): OwnerCommand | null {
   m = trimmed.match(/^#?(\d+)\s+nota\s+(.+)$/is);
   if (m) return { action: "add_note", requestId: Number(m[1]), note: m[2]!.trim() };
 
-  // "<id> ok" / "ok <id>"
-  m = trimmed.match(/^#?(\d+)\s+ok$/i) ?? trimmed.match(/^ok\s+#?(\d+)$/i);
-  if (m) return { action: "approve", requestId: Number(m[1]) };
+  // "<id> ok" / "ok <id>" / "<id> inviato" / "inviato <id>"
+  // "ok" resta come alias per compatibilità con chi l'ha già in memoria: da
+  // quando l'invio è manuale, entrambi si limitano a registrare che il
+  // titolare ha mandato il preventivo, senza inviare nulla al posto suo.
+  m =
+    trimmed.match(/^#?(\d+)\s+(?:ok|inviato)$/i) ??
+    trimmed.match(/^(?:ok|inviato)\s+#?(\d+)$/i);
+  if (m) return { action: "mark_sent", requestId: Number(m[1]) };
 
   // "<id> rifiuta <motivo?>"
   m = trimmed.match(/^#?(\d+)\s+rifiuta\s*(.*)$/is);

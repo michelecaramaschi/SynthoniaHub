@@ -19,6 +19,11 @@ export function confirmationUrl(baseUrl: string, token: string): string {
   return `${baseUrl.replace(/\/+$/, "")}/conferma/${token}`;
 }
 
+/** Public URL that streams the quote PDF, for the owner to download and forward. */
+export function pdfUrl(baseUrl: string, token: string): string {
+  return `${baseUrl.replace(/\/+$/, "")}/preventivo/${token}`;
+}
+
 /** Quote validity window, mirroring the 30 days stated in the WhatsApp message. */
 function validUntil(from: Date): Date {
   const until = new Date(from);

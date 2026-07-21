@@ -46,10 +46,12 @@ describe("parseOwnerCommand", () => {
     });
   });
 
-  it("parses approval in both orders", () => {
-    expect(parseOwnerCommand("42 ok")).toEqual({ action: "approve", requestId: 42 });
-    expect(parseOwnerCommand("ok 42")).toEqual({ action: "approve", requestId: 42 });
-    expect(parseOwnerCommand("OK 42")).toEqual({ action: "approve", requestId: 42 });
+  it("parses mark_sent via 'ok' and 'inviato', in both orders", () => {
+    expect(parseOwnerCommand("42 ok")).toEqual({ action: "mark_sent", requestId: 42 });
+    expect(parseOwnerCommand("ok 42")).toEqual({ action: "mark_sent", requestId: 42 });
+    expect(parseOwnerCommand("OK 42")).toEqual({ action: "mark_sent", requestId: 42 });
+    expect(parseOwnerCommand("42 inviato")).toEqual({ action: "mark_sent", requestId: 42 });
+    expect(parseOwnerCommand("inviato 42")).toEqual({ action: "mark_sent", requestId: 42 });
   });
 
   it("parses rejection with and without reason", () => {

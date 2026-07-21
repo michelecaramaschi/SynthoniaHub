@@ -14,7 +14,7 @@ import {
   ownerNotification,
   quoteMessage,
 } from "./templates.js";
-import { confirmationUrl } from "../quote/pdf.js";
+import { confirmationUrl, pdfUrl } from "../quote/pdf.js";
 
 export interface OwnerFlowDeps {
   config: AppConfig;
@@ -58,6 +58,31 @@ export async function handleOwnerMessage(
   await executeOwnerCommand(deps, command);
 }
 
+/**
+ * Testo + link pronti da copiare/inoltrare. L'invio al cliente resta manuale:
+ * il titolare decide come e cosa aggiungere (disponibilità, extra a voce)
+ * prima di mandarlo lui stesso su WhatsApp.
+ */
+function ownerPreview(
+  request: QuoteRequest,
+  config: AppConfig,
+  quoteRepo: QuoteRequestRepository,
+): string {
+  const token = quoteRepo.ensureConfirmationToken(request.id);
+  const confirmUrl = confirmationUrl(config.publicBaseUrl, token);
+  const pdf = pdfUrl(config.publicBaseUrl, token);
+  const body = quoteMessage(request, config.business, confirmUrl);
+  return [
+    "Testo pronto da inviare al cliente:",
+    "────────────",
+    body,
+    "────────────",
+    `PDF da scaricare e allegare: ${pdf}`,
+    "",
+    `Quando lo mandi, scrivi "${request.id} inviato" per tenerne traccia.`,
+  ].join("\n");
+}
+
 async function executeOwnerCommand(
   deps: OwnerFlowDeps,
   command: OwnerCommand,
@@ -98,9 +123,8 @@ async function executeOwnerCommand(
         return;
       }
       const updated = quoteRepo.patch(request.id, { price_eur: command.priceEur });
-      const preview = quoteMessage(updated, config.business);
       await replyToOwner(
-        `Prezzo impostato: ${command.priceEur}€ per la richiesta #${request.id}.\n\nAnteprima del messaggio al cliente:\n────────────\n${preview}\n────────────\nRispondi "${request.id} ok" per inviarlo, oppure "${request.id} prezzo <importo>" per cambiare il prezzo.`,
+        `Prezzo impostato: ${command.priceEur}€ per la richiesta #${request.id}.\n\n${ownerPreview(updated, config, quoteRepo)}`,
       );
       return;
     }
@@ -108,9 +132,8 @@ async function executeOwnerCommand(
     case "add_note": {
       const updated = quoteRepo.appendOwnerNote(request.id, command.note);
       if (updated.status === "pending_owner" && updated.price_eur != null) {
-        const preview = quoteMessage(updated, config.business);
         await replyToOwner(
-          `Nota aggiunta alla richiesta #${request.id}.\n\nAnteprima aggiornata:\n────────────\n${preview}\n────────────\nRispondi "${request.id} ok" per inviare.`,
+          `Nota aggiunta alla richiesta #${request.id}.\n\n${ownerPreview(updated, config, quoteRepo)}`,
         );
       } else {
         await replyToOwner(`Nota aggiunta alla richiesta #${request.id}.`);
@@ -118,7 +141,7 @@ async function executeOwnerCommand(
       return;
     }
 
-    case "approve": {
+    case "mark_sent": {
       if (request.status !== "pending_owner") {
         await replyToOwner(
           `La richiesta #${request.id} non è in attesa di invio (stato: ${request.status}).`,
@@ -131,14 +154,12 @@ async function executeOwnerCommand(
         );
         return;
       }
-      const token = quoteRepo.ensureConfirmationToken(request.id);
-      const confirmUrl = confirmationUrl(config.publicBaseUrl, token);
-      const body = quoteMessage(request, config.business, confirmUrl);
-      await provider.sendText(request.customer_phone, body);
-      messageRepo.recordOutbound(request.id, body);
+      // L'invio al cliente lo fa il titolare, non il bot: qui registriamo
+      // solo il passaggio di stato, che attiva il link di conferma già
+      // incluso nel testo copiato con "prezzo"/"nota".
       quoteRepo.transition(request.id, "quoted");
       await replyToOwner(
-        `Preventivo #${request.id} inviato a ${request.customer_name ?? request.customer_phone}.\nIl cliente può confermarlo da solo: quando lo fa ricevi una notifica qui e la richiesta passa a "vinta".\nPuoi comunque chiuderla a mano: "${request.id} vinto" oppure "${request.id} perso".`,
+        `Richiesta #${request.id} segnata come inviata a ${request.customer_name ?? request.customer_phone}.\nQuando il cliente conferma dal link ricevi una notifica qui e la richiesta passa a "vinta".\nPuoi comunque chiuderla a mano: "${request.id} vinto" oppure "${request.id} perso".`,
       );
       return;
     }
