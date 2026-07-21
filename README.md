@@ -19,11 +19,30 @@ Titolare su WhatsApp ◀── 🎧 NUOVA RICHIESTA DI PREVENTIVO #42 (riepilogo
         │  42 nota <testo>    → aggiunge una riga al preventivo (opzionale)
         │  42 ok              → il preventivo parte verso il cliente
         ▼
-Cliente riceve il preventivo formattato ──▶  42 vinto / 42 perso
+Cliente riceve il preventivo formattato + link di conferma
+        │  clic sul link (o QR code sul PDF) → accetta il preventivo
+        ▼
+Titolare ◀── ✅ PREVENTIVO #42 CONFERMATO   (richiesta segnata "vinta" in automatico)
 ```
 
 Regole fisse del bot: **mai prezzi o stime** (ogni preventivo è su misura), mai
 disponibilità inventate.
+
+## Conferma del preventivo con un clic
+
+Quando il preventivo parte, il cliente riceve anche un **link di conferma**
+univoco (e un **QR code** se gli mandi il PDF). Aprendolo vede il riepilogo con
+il totale e un pulsante: al clic, la richiesta passa in automatico a **"vinta"**
+nel database e **ricevi la notifica su WhatsApp** con nome ed eventuali note del
+cliente — senza che tu debba scrivere `42 vinto` a mano.
+
+- La pagina di conferma è servita da `GET/POST /conferma/<token>`; il token è
+  casuale e non rivela l'id progressivo della richiesta.
+- La conferma è **idempotente**: un secondo clic non registra nulla di nuovo e
+  non ti invia una seconda notifica.
+- Puoi comunque chiudere la richiesta a mano (`42 vinto` / `42 perso`) come prima.
+- Il PDF del preventivo si genera con la stessa formattazione dei messaggi
+  (`src/quote/pdf.ts`); il link nel PDF punta a `PUBLIC_BASE_URL` (sotto).
 
 ## Due modalità di conversazione (scegli tu)
 
@@ -74,7 +93,8 @@ Nel simulatore scrivi come cliente; `/owner` ti trasforma nel titolare,
 Lo scenario passo-passo completo è in [`test/e2e-scenario.md`](test/e2e-scenario.md).
 
 Test automatici (senza chiave API): `npm test` — firma webhook, state machine,
-comandi titolare, flusso di approvazione, endpoint webhook.
+comandi titolare, flusso di approvazione, endpoint webhook, e conferma del
+preventivo (token, pagina, notifica al titolare, generazione PDF).
 
 ## Provalo sul numero WhatsApp vero, ma in locale (tunnel)
 
@@ -116,8 +136,11 @@ hosting sempre acceso con **disco persistente** e **HTTPS pubblico**.
 
 Variabili d'ambiente da impostare (vedi `.env.example`): `WHATSAPP_TOKEN`,
 `PHONE_NUMBER_ID`, `VERIFY_TOKEN`, `APP_SECRET`, `OWNER_PHONE` (il tuo numero,
-es. `393401234567`), `DB_PATH=/app/data/synthonia.db`. `ANTHROPIC_API_KEY` è
-opzionale: impostala solo se vuoi la modalità AI conversazionale.
+es. `393401234567`), `DB_PATH=/app/data/synthonia.db`, e `PUBLIC_BASE_URL` con
+l'URL HTTPS pubblico dell'host (es. `https://synthonia.up.railway.app`): è
+l'indirizzo che finisce nei link di conferma, quindi deve essere quello reale
+raggiungibile dai clienti, **non** `localhost`. `ANTHROPIC_API_KEY` è opzionale:
+impostala solo se vuoi la modalità AI conversazionale.
 
 Avvio: `npm run start` (il process manager della piattaforma lo tiene attivo).
 
@@ -156,7 +179,13 @@ sqlite3 /app/data/synthonia.db ".backup /app/data/backup-$(date +%F).db"
 src/
 ├── index.ts                 # entrypoint del server WhatsApp
 ├── config.ts                # validazione .env + profilo aziendale + scelta modalità
-├── server/                  # Express: verifica webhook + firma HMAC
+├── server/
+│   ├── app.ts              # Express: monta webhook + pagina di conferma
+│   ├── webhook.ts          # verifica webhook Meta + firma HMAC
+│   └── confirm.ts          # pagina pubblica /conferma/<token> (accettazione cliente)
+├── quote/
+│   ├── pdf.ts              # genera il PDF del preventivo con link + QR di conferma
+│   └── confirm-page.ts     # HTML della pagina di conferma
 ├── core/
 │   ├── router.ts            # smista i messaggi (titolare vs cliente), sceglie il motore
 │   ├── guided-conversation.ts    # flusso guidato deterministico (no API)
