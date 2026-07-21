@@ -27,15 +27,13 @@ function renderEventRows(container, locations) {
     .flatMap((loc) => loc.events.map((event) => ({ ...event, loc })))
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  rows.forEach(({ name, date, loc }) => {
-    const { full } = formatEventDate(date);
+  rows.forEach(({ name, loc }) => {
     const row = document.createElement("div");
     row.className = "event-row";
     row.innerHTML = `
       <div class="event-row-info">
         <h3>${name}</h3>
         <div class="event-row-meta">
-          <span>🕐 ${full}</span>
           <span>📍 ${loc.city}, ${loc.province}, ${loc.country}</span>
         </div>
       </div>
@@ -100,14 +98,11 @@ function renderLocationDetail(location) {
     eventsList.innerHTML = '<p class="empty-state">Nessun evento in programma al momento per questa location.</p>';
   } else {
     location.events.forEach((event) => {
-      const { day, month, full } = formatEventDate(event.date);
       const item = document.createElement("article");
       item.className = "event-item";
       item.innerHTML = `
-        <div class="event-date"><span class="day">${day}</span><span class="month">${month}</span></div>
         <div>
           <h3>${event.name}</h3>
-          <p class="hint" style="margin-bottom:8px;">${full}</p>
           <p>${event.description}</p>
         </div>
       `;
