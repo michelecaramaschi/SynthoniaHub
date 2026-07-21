@@ -34,7 +34,7 @@ function renderEventRows(container, locations) {
       <div class="event-row-info">
         <h3>${name}</h3>
         <div class="event-row-meta">
-          <span>📍 ${loc.city}, ${loc.province}, ${loc.country}</span>
+          <span>📍 ${loc.city}, ${loc.province}</span>
         </div>
       </div>
     `;

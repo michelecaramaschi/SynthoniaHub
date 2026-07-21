@@ -249,7 +249,7 @@ p {
 .nav-icon.wa {
   background: var(--whatsapp);
   border-color: var(--whatsapp);
-  color: #06210f;
+  color: #fff;
 }
 
 .nav-toggle {
@@ -878,7 +878,7 @@ textarea {
   align-items: center;
   justify-content: center;
   box-shadow: 0 14px 30px rgba(37, 211, 102, 0.4);
-  font-size: 1.5rem;
+  color: #fff;
 }
 
 /* ==========================================================================
