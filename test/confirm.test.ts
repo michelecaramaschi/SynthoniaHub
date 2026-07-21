@@ -168,6 +168,17 @@ describe("confirmation endpoints", () => {
     });
   });
 
+  it("shows the event date in Italian format, not ISO", async () => {
+    const { app, quoteRepo } = buildTestApp();
+    const { token } = seedQuotedRequest(quoteRepo);
+
+    await withServer(app, async (baseUrl) => {
+      const html = await (await fetch(`${baseUrl}/conferma/${token}`)).text();
+      expect(html).toContain("12/09/2026");
+      expect(html).not.toContain("2026-09-12");
+    });
+  });
+
   it("404s an unknown token without leaking whether it ever existed", async () => {
     const { app } = buildTestApp();
     await withServer(app, async (baseUrl) => {

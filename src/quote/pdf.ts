@@ -3,6 +3,7 @@ import QRCode from "qrcode";
 import type { BusinessProfile } from "../config.js";
 import type { QuoteRequest } from "../db/repositories.js";
 import {
+  eventDateItalian,
   eventTypeLabel,
   formatPrice,
   serviceLabels,
@@ -16,10 +17,6 @@ const ACCENT = "#1f7a4d";
 /** Public URL the customer opens to accept the quote. */
 export function confirmationUrl(baseUrl: string, token: string): string {
   return `${baseUrl.replace(/\/+$/, "")}/conferma/${token}`;
-}
-
-function eventDateLabel(request: QuoteRequest): string {
-  return request.event_date ?? request.event_date_raw ?? "da definire";
 }
 
 /** Quote validity window, mirroring the 30 days stated in the WhatsApp message. */
@@ -119,7 +116,7 @@ export async function generateQuotePdf(
   // ── Event detail ──────────────────────────────────────────────────────────
   sectionTitle(doc, "DETTAGLI EVENTO", left, width);
   row(doc, "Tipo evento", eventTypeLabel(request.event_type), left, width);
-  row(doc, "Data", eventDateLabel(request), left, width);
+  row(doc, "Data", eventDateItalian(request), left, width);
   row(doc, "Luogo", request.location ?? "da definire", left, width);
   row(
     doc,

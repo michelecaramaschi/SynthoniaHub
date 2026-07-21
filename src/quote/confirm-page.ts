@@ -1,6 +1,7 @@
 import type { BusinessProfile } from "../config.js";
 import type { QuoteRequest } from "../db/repositories.js";
 import {
+  eventDateItalian,
   eventTypeLabel,
   formatPrice,
   serviceLabels,
@@ -84,7 +85,7 @@ function detailRows(
 ): string {
   const rows: Array<[string, string]> = [
     ["Evento", eventTypeLabel(request.event_type)],
-    ["Data", request.event_date ?? request.event_date_raw ?? "da definire"],
+    ["Data", eventDateItalian(request)],
     ["Luogo", request.location ?? "da definire"],
     ["Servizi", serviceLabels(request.services, business)],
   ];

@@ -31,6 +31,15 @@ function formatDate(request: QuoteRequest): string {
   return request.event_date ?? request.event_date_raw ?? "da definire";
 }
 
+/** Resolved ISO date shown the Italian way (12/09/2026); falls back to the customer's wording. */
+export function eventDateItalian(request: QuoteRequest): string {
+  if (request.event_date) {
+    const [year, month, day] = request.event_date.split("-");
+    if (year && month && day) return `${day}/${month}/${year}`;
+  }
+  return request.event_date_raw ?? "da definire";
+}
+
 /** Italian format ("1.200,50") without relying on the runtime's ICU data. */
 export function formatPrice(price: number): string {
   const [integerPart, decimalPart] = price.toFixed(2).split(".") as [
@@ -134,7 +143,7 @@ export function confirmationNotification(
     "",
     `Cliente: ${request.customer_name ?? "nome non fornito"} (+${request.customer_phone})`,
     `Evento: ${eventTypeLabel(request.event_type)}`,
-    `Data: ${request.event_date ?? request.event_date_raw ?? "da definire"}`,
+    `Data: ${eventDateItalian(request)}`,
     `Luogo: ${request.location ?? "da definire"}`,
     `Servizi: ${serviceLabels(request.services, business)}`,
   ];
