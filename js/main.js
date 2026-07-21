@@ -20,18 +20,6 @@ function initMobileNav() {
   });
 }
 
-function populateLocationSelect() {
-  const select = document.getElementById("quote-location");
-  if (!select || typeof LOCATIONS === "undefined") return;
-
-  LOCATIONS.forEach((loc) => {
-    const option = document.createElement("option");
-    option.value = loc.name;
-    option.textContent = `${loc.name} (${loc.city})`;
-    select.appendChild(option);
-  });
-}
-
 function buildWhatsAppMessage(data) {
   const lines = [
     "Ciao Synthonia! Vorrei richiedere un preventivo per un evento.",
@@ -91,6 +79,5 @@ function initQuoteForm() {
 
 document.addEventListener("DOMContentLoaded", () => {
   initMobileNav();
-  populateLocationSelect();
   initQuoteForm();
 });

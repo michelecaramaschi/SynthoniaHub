@@ -828,7 +828,7 @@ textarea {
 }
 
 .brand-logo--light {
-  filter: invert(1);
+  /* usa il PNG bianco su trasparente, nessun filtro necessario */
 }
 
 .footer-inner {
