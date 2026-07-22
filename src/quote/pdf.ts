@@ -9,10 +9,14 @@ import {
   serviceLabels,
 } from "../core/templates.js";
 
-const INK = "#1a3a52";
-const MUTED = "#666666";
-const RULE = "#d8dee4";
-const ACCENT = "#1f7a4d";
+// Synthonia brand palette: dark, elegant, high-contrast — mirrors the real
+// "Artistic Proposal" decks (photo overlays, white type on near-black).
+const BG = "#0f1420"; // page background (deep navy-black)
+const PANEL = "#171d2b"; // slightly lighter panel/rule fills
+const WHITE = "#ffffff";
+const GREY = "#8a94a6"; // muted secondary text (the "DJ SET" grey in bicolour titles)
+const HAIRLINE = "#2a3242";
+const ACCENT = "#c9a24b"; // warm gold, from the venue lights in the decks
 
 /** Public URL the customer opens to accept the quote. */
 export function confirmationUrl(baseUrl: string, token: string): string {
@@ -37,6 +41,11 @@ function formatItalianDate(date: Date): string {
   return `${day}/${month}/${date.getFullYear()}`;
 }
 
+/** Renders letter-spaced uppercase, the signature look of the Synthonia decks. */
+function spaced(text: string): string {
+  return text.toUpperCase();
+}
+
 export interface QuotePdfOptions {
   request: QuoteRequest;
   business: BusinessProfile;
@@ -46,8 +55,9 @@ export interface QuotePdfOptions {
 }
 
 /**
- * Renders the quote as a PDF buffer. The document carries a confirmation link
- * and a QR code for the same URL, so the customer can accept from phone or desktop.
+ * Renders the quote as a PDF buffer in the Synthonia brand style: dark theme,
+ * SY monogram, spaced uppercase titles. Carries a confirmation link and a QR
+ * code for the same URL, so the customer can accept from phone or desktop.
  */
 export async function generateQuotePdf(
   options: QuotePdfOptions,
@@ -59,13 +69,15 @@ export async function generateQuotePdf(
     throw new Error(`Quote request #${request.id} has no price set`);
   }
 
+  // Gold QR on transparent, so it sits cleanly on the dark confirmation panel.
   const qrDataUrl = await QRCode.toDataURL(confirmUrl, {
     margin: 1,
     width: 320,
+    color: { dark: "#ffffff", light: "#00000000" },
   });
   const qrBuffer = Buffer.from(qrDataUrl.split(",")[1]!, "base64");
 
-  const doc = new PDFDocument({ size: "A4", margin: 56 });
+  const doc = new PDFDocument({ size: "A4", margin: 0 });
   const chunks: Buffer[] = [];
   doc.on("data", (chunk: Buffer) => chunks.push(chunk));
   const done = new Promise<Buffer>((resolve, reject) => {
@@ -73,179 +85,212 @@ export async function generateQuotePdf(
     doc.on("error", reject);
   });
 
-  const left = doc.page.margins.left;
-  const right = doc.page.width - doc.page.margins.right;
+  const pageW = doc.page.width;
+  const pageH = doc.page.height;
+  const M = 48; // content margin
+  const left = M;
+  const right = pageW - M;
   const width = right - left;
 
-  // ── Header ────────────────────────────────────────────────────────────────
-  doc
-    .fillColor(INK)
-    .fontSize(22)
-    .font("Helvetica-Bold")
-    .text(business.name, left, doc.y);
-  doc
-    .fillColor(MUTED)
-    .fontSize(10)
-    .font("Helvetica")
-    .text("Musica ed eventi", { continued: false });
+  // ── Full-bleed dark background ──────────────────────────────────────────────
+  doc.rect(0, 0, pageW, pageH).fill(BG);
 
-  doc.moveDown(0.8);
+  // ── Brand header: "Synthonia Agency" left, SY monogram right ────────────────
   doc
-    .strokeColor(INK)
-    .lineWidth(2)
-    .moveTo(left, doc.y)
-    .lineTo(right, doc.y)
-    .stroke();
-  doc.moveDown(1);
+    .fillColor(WHITE)
+    .font("Helvetica-Bold")
+    .fontSize(11)
+    .text("Synthonia Agency", left, M, { characterSpacing: 0.5 });
+  drawMonogram(doc, right - 34, M - 2);
+
+  let y = M + 40;
+
+  // ── Title: bicolour spaced uppercase ("PREVENTIVO" white + "SU MISURA" grey) ─
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(26)
+    .fillColor(WHITE)
+    .text(spaced("Preventivo "), left, y, {
+      characterSpacing: 3,
+      continued: true,
+    })
+    .fillColor(GREY)
+    .text(spaced("su misura"), { characterSpacing: 3 });
+  y = doc.y + 6;
 
   doc
-    .fillColor(INK)
-    .fontSize(16)
-    .font("Helvetica-Bold")
-    .text(`Preventivo #${request.id}`);
-  doc
-    .fillColor(MUTED)
-    .fontSize(10)
     .font("Helvetica")
+    .fontSize(9.5)
+    .fillColor(GREY)
     .text(
-      `Emesso il ${formatItalianDate(now)} — valido fino al ${formatItalianDate(validUntil(now))}`,
+      `#${request.id}  ·  emesso il ${formatItalianDate(now)}  ·  valido fino al ${formatItalianDate(validUntil(now))}`,
+      left,
+      y,
+      { characterSpacing: 0.5 },
     );
-  doc.moveDown(1.2);
+  y = doc.y + 22;
 
-  // ── Customer ──────────────────────────────────────────────────────────────
-  sectionTitle(doc, "CLIENTE", left, width);
-  row(doc, "Nome", request.customer_name ?? "non fornito", left, width);
-  row(doc, "Telefono", `+${request.customer_phone}`, left, width);
-  doc.moveDown(0.8);
-
-  // ── Event detail ──────────────────────────────────────────────────────────
-  sectionTitle(doc, "DETTAGLI EVENTO", left, width);
-  row(doc, "Tipo evento", eventTypeLabel(request.event_type), left, width);
-  row(doc, "Data", eventDateItalian(request), left, width);
-  row(doc, "Luogo", request.location ?? "da definire", left, width);
-  row(
+  // ── INFO block (client + event) in the deck's centred style ─────────────────
+  y = sectionTitle(doc, "Info evento", left, width, y);
+  y = infoRow(doc, "Cliente", request.customer_name ?? "non fornito", left, width, y);
+  y = infoRow(doc, "Contatto", `+${request.customer_phone}`, left, width, y);
+  y = infoRow(doc, "Evento", eventTypeLabel(request.event_type), left, width, y);
+  y = infoRow(doc, "Data", eventDateItalian(request), left, width, y);
+  y = infoRow(doc, "Location", request.location ?? "da definire", left, width, y);
+  y = infoRow(
     doc,
     "Ospiti",
     request.guest_count != null ? String(request.guest_count) : "da definire",
     left,
     width,
+    y,
   );
-  row(doc, "Servizi", serviceLabels(request.services, business), left, width);
-  row(
+  y = infoRow(
     doc,
     "Durata",
-    request.duration_hours != null
-      ? `${request.duration_hours} ore`
-      : "da definire",
+    request.duration_hours != null ? `${request.duration_hours} ore` : "da definire",
     left,
     width,
+    y,
   );
   if (request.special_requests) {
-    row(doc, "Richieste", request.special_requests, left, width);
+    y = infoRow(doc, "Richieste", request.special_requests, left, width, y);
   }
-  doc.moveDown(0.8);
+  y += 14;
 
-  // ── Notes from the owner ──────────────────────────────────────────────────
-  if (request.owner_notes) {
-    sectionTitle(doc, "NOTE", left, width);
-    doc
-      .fillColor("#333333")
-      .fontSize(10)
-      .font("Helvetica")
-      .text(request.owner_notes, left, doc.y, { width });
-    doc.moveDown(0.8);
-  }
-
-  // ── Total ─────────────────────────────────────────────────────────────────
-  const totalTop = doc.y;
-  doc.rect(left, totalTop, width, 42).fill("#f2f5f8");
+  // ── Servizi inclusi ─────────────────────────────────────────────────────────
+  y = sectionTitle(doc, "Servizi inclusi", left, width, y);
+  const services = serviceLabels(request.services, business);
   doc
-    .fillColor(INK)
-    .fontSize(12)
-    .font("Helvetica-Bold")
-    .text("TOTALE", left + 14, totalTop + 14);
-  doc
-    .fontSize(16)
-    .text(`${formatPrice(request.price_eur)} €`, left, totalTop + 11, {
-      width: width - 14,
-      align: "right",
-    });
-  doc.y = totalTop + 42;
-  doc.moveDown(0.6);
-
-  doc
-    .fillColor(MUTED)
-    .fontSize(9)
     .font("Helvetica")
+    .fontSize(11)
+    .fillColor(WHITE)
+    .text(services, left, y, { width, characterSpacing: 0.3 });
+  y = doc.y + 6;
+  doc
+    .font("Helvetica")
+    .fontSize(8.5)
+    .fillColor(GREY)
     .text(
-      "Il preventivo comprende attrezzatura, allestimento e assistenza tecnica per tutta la durata dell'evento. Validità 30 giorni dalla data di emissione.",
+      "Include attrezzatura, allestimento, smontaggio e assistenza tecnica per tutta la durata dell'evento.",
       left,
-      doc.y,
+      y,
       { width },
     );
-  doc.moveDown(1.2);
+  y = doc.y + 6;
 
-  // ── Confirmation block ────────────────────────────────────────────────────
-  const boxTop = doc.y;
-  const boxHeight = 132;
+  // ── Note del titolare ───────────────────────────────────────────────────────
+  if (request.owner_notes) {
+    y += 8;
+    y = sectionTitle(doc, "Note", left, width, y);
+    doc
+      .font("Helvetica")
+      .fontSize(10)
+      .fillColor("#cfd6e2")
+      .text(request.owner_notes, left, y, { width });
+    y = doc.y + 6;
+  }
+  y += 14;
+
+  // ── Totale: gold rule + large figure ────────────────────────────────────────
   doc
-    .rect(left, boxTop, width, boxHeight)
-    .lineWidth(1.5)
+    .strokeColor(ACCENT)
+    .lineWidth(1)
+    .moveTo(left, y)
+    .lineTo(right, y)
+    .stroke();
+  y += 14;
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(13)
+    .fillColor(WHITE)
+    .text(spaced("Totale"), left, y + 6, { characterSpacing: 2 });
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(24)
+    .fillColor(ACCENT)
+    .text(`${formatPrice(request.price_eur)} €`, left, y, {
+      width,
+      align: "right",
+    });
+  y = doc.y + 4;
+  doc
+    .font("Helvetica")
+    .fontSize(8)
+    .fillColor(GREY)
+    .text("IVA inclusa · validità 30 giorni dalla data di emissione", left, y, {
+      width,
+      align: "right",
+    });
+  y += 26;
+
+  // ── Confirmation panel (gold border, QR + link) ─────────────────────────────
+  const boxH = 128;
+  doc.roundedRect(left, y, width, boxH, 8).fill(PANEL);
+  doc
+    .roundedRect(left, y, width, boxH, 8)
+    .lineWidth(1)
     .strokeColor(ACCENT)
     .stroke();
 
-  const qrSize = 96;
-  const qrX = right - qrSize - 18;
-  doc.image(qrBuffer, qrX, boxTop + 18, { width: qrSize, height: qrSize });
+  const qrSize = 92;
+  const qrPad = 18;
+  const qrX = right - qrSize - qrPad;
+  const qrY = y + (boxH - qrSize) / 2;
+  doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
 
-  const textWidth = qrX - left - 36;
+  const tx = left + 22;
+  const tw = qrX - tx - 22;
   doc
-    .fillColor(ACCENT)
-    .fontSize(13)
     .font("Helvetica-Bold")
-    .text("CONFERMA IL PREVENTIVO", left + 18, boxTop + 20, {
-      width: textWidth,
+    .fontSize(13)
+    .fillColor(ACCENT)
+    .text(spaced("Conferma il preventivo"), tx, y + 22, {
+      width: tw,
+      characterSpacing: 1.5,
     });
   doc
-    .fillColor("#333333")
-    .fontSize(10)
     .font("Helvetica")
+    .fontSize(9.5)
+    .fillColor("#cfd6e2")
     .text(
-      "Per accettare, inquadra il QR code o apri questo link. La conferma ci arriva subito, senza altri passaggi.",
-      left + 18,
-      doc.y + 4,
-      { width: textWidth },
+      "Inquadra il QR code o apri il link qui sotto: la conferma ci arriva subito, senza altri passaggi.",
+      tx,
+      doc.y + 8,
+      { width: tw },
     );
-  doc.moveDown(0.4);
   doc
-    .fillColor(ACCENT)
-    .fontSize(9)
     .font("Helvetica-Bold")
-    .text(confirmUrl, left + 18, doc.y, {
-      width: textWidth,
+    .fontSize(8.5)
+    .fillColor(ACCENT)
+    .text(confirmUrl, tx, doc.y + 12, {
+      width: tw,
       link: confirmUrl,
       underline: true,
     });
+  y += boxH + 20;
 
-  doc.y = boxTop + boxHeight;
-  doc.moveDown(1);
-
-  // ── Footer ────────────────────────────────────────────────────────────────
+  // ── Footer: contacts, centred, like the closing deck page ───────────────────
   doc
-    .strokeColor(RULE)
+    .strokeColor(HAIRLINE)
     .lineWidth(1)
-    .moveTo(left, doc.y)
-    .lineTo(right, doc.y)
+    .moveTo(left, y)
+    .lineTo(right, y)
     .stroke();
-  doc.moveDown(0.5);
+  y += 12;
   doc
-    .fillColor(MUTED)
-    .fontSize(8)
+    .font("Helvetica-Bold")
+    .fontSize(9)
+    .fillColor(WHITE)
+    .text(spaced(business.name), left, y, { width, align: "center", characterSpacing: 2 });
+  doc
     .font("Helvetica")
+    .fontSize(8)
+    .fillColor(GREY)
     .text(
-      `${business.name} — ${business.coverage_area}. Documento generato automaticamente, non richiede firma.`,
+      `${business.coverage_area}  ·  Documento generato automaticamente, non richiede firma.`,
       left,
-      doc.y,
+      doc.y + 3,
       { width, align: "center" },
     );
 
@@ -253,45 +298,60 @@ export async function generateQuotePdf(
   return done;
 }
 
+/** Draws the SY monogram as vector text (no external asset needed). */
+function drawMonogram(doc: PDFKit.PDFDocument, x: number, y: number): void {
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(22)
+    .fillColor(WHITE)
+    .text("SY", x, y, { lineBreak: false });
+  // The dot in the real logo sits at the baseline right of the Y.
+  doc.circle(x + 30, y + 20, 1.6).fill(ACCENT);
+}
+
+/** Section header: spaced uppercase label over a hairline rule. Returns new y. */
 function sectionTitle(
   doc: PDFKit.PDFDocument,
   label: string,
   left: number,
   width: number,
-): void {
+  y: number,
+): number {
   doc
-    .fillColor(INK)
-    .fontSize(10)
     .font("Helvetica-Bold")
-    .text(label, left, doc.y, { width, characterSpacing: 0.6 });
-  doc.moveDown(0.2);
+    .fontSize(10)
+    .fillColor(ACCENT)
+    .text(spaced(label), left, y, { width, characterSpacing: 2 });
+  const ny = doc.y + 5;
   doc
-    .strokeColor(RULE)
+    .strokeColor(HAIRLINE)
     .lineWidth(1)
-    .moveTo(left, doc.y)
-    .lineTo(left + width, doc.y)
+    .moveTo(left, ny)
+    .lineTo(left + width, ny)
     .stroke();
-  doc.moveDown(0.45);
+  return ny + 10;
 }
 
-function row(
+/** Label/value row on the dark theme. Returns the new y after the row. */
+function infoRow(
   doc: PDFKit.PDFDocument,
   label: string,
   value: string,
   left: number,
   width: number,
-): void {
-  const labelWidth = 110;
-  const top = doc.y;
+  y: number,
+): number {
+  const labelWidth = 96;
   doc
-    .fillColor(MUTED)
-    .fontSize(10)
     .font("Helvetica")
-    .text(label, left, top, { width: labelWidth });
+    .fontSize(10)
+    .fillColor(GREY)
+    .text(label, left, y, { width: labelWidth });
   const labelBottom = doc.y;
   doc
-    .fillColor("#222222")
     .font("Helvetica")
-    .text(value, left + labelWidth, top, { width: width - labelWidth });
-  doc.y = Math.max(labelBottom, doc.y) + 3;
+    .fontSize(10)
+    .fillColor(WHITE)
+    .text(value, left + labelWidth, y, { width: width - labelWidth });
+  return Math.max(labelBottom, doc.y) + 5;
 }
