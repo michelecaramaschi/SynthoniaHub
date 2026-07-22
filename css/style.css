@@ -440,6 +440,42 @@ p {
   background: var(--bg-alt);
 }
 
+.reviews {
+  background: var(--bg);
+}
+
+.reviews-card {
+  max-width: 640px;
+  margin: 0 auto;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px;
+}
+
+.reviews-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.review-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--bg-alt);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.reviews-card p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
 .about-inner {
   display: grid;
   grid-template-columns: 0.9fr 1.1fr;
