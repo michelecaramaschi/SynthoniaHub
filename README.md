@@ -14,7 +14,7 @@ Sito statico (HTML/CSS/JS puro, nessuna dipendenza o build tool) per Synthonia �
 
 Tutti i contenuti di location, eventi e foto vivono in un unico file: **`js/locations-data.js`**. Per aggiungere o modificare una location, aggiungi/modifica una voce nell'array `LOCATIONS` (nome, città, descrizione, eventi, foto) — non serve toccare l'HTML.
 
-Le foto sono attualmente placeholder generati via CSS. Per usare foto reali, aggiungi le immagini in `assets/img/` e imposta il campo `src` in ogni oggetto `photos` (e aggiorna `js/locations-render.js` per usare `<img src="...">` al posto del riquadro sfumato).
+Le foto del sito sono in `assets/img/foto/`; quelle delle singole location sono ancora placeholder generati via CSS. Per usare foto reali, aggiungi le immagini in `assets/img/` e imposta il campo `src` in ogni oggetto `photos` (e aggiorna `js/locations-render.js` per usare `<img src="...">` al posto del riquadro sfumato).
 
 ### Numero WhatsApp
 
@@ -29,3 +29,7 @@ python3 -m http.server 8000
 ```
 
 e visitare `http://localhost:8000`.
+
+### Brand identity 2027
+
+Palette nero `#0E0E0E` / oro `#C5A467` / bianco, con avorio `#F4F0E8` per i blocchi chiari. Titoli in Cormorant Garamond, testi ed etichette in Urbanist (Google Fonts, importati in `css/style.css`). Logo: `assets/img/logo-white.png` (header), `assets/img/logo-gold.png` (footer), pittogramma `assets/img/sy-gold.svg`.
